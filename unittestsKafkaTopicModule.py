@@ -174,6 +174,7 @@ class TestAnsibleClass(unittest.TestCase):
     def fail_module_test(self):
         fail_module(message="Test is successfull")
 
-
+if __name__ == '__main__':
+    unittest.main()
 
 
