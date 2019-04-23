@@ -164,15 +164,18 @@ class TestKafkaClass(unittest.TestCase):
         kafka_topic.add_config_together(module)
 
 class TestAnsibleClass(unittest.TestCase):
-
-    global module
-    module = AnsibleModule(
-        argument_spec = dict()
-    )
-
+#
+#    global module
+#    module = AnsibleModule(
+#        argument_spec = dict(
+#              name=dict(type='str', required=True)
+#          )
+#    )
+#
     # fail_module
     def fail_module_test(self):
-        fail_module(message="Test is successfull")
+        import kafka_topic
+        kafka_topic.fail_module(message="Test is successfull")
 
 if __name__ == '__main__':
     unittest.main()
