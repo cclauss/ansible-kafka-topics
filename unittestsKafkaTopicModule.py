@@ -83,4 +83,12 @@ class TestValidateClass(unittest.TestCase):
 class TestKafkaClass(unittest.TestCase):
 
 
+
 class TestAnsibleClass(unittest.TestCase):
+    # fail_module
+    def fail_module_test(self):
+        fail_module(message="Test is successfull")
+
+
+
+
