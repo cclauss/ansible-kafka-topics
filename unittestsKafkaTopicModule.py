@@ -2,6 +2,7 @@
 
 import unittest
 import mock
+from confluent_kafka.admin import AdminClient
 
 class TestValidateClass(unittest.TestCase):
     # validate_name
@@ -82,9 +83,90 @@ class TestValidateClass(unittest.TestCase):
 
 class TestKafkaClass(unittest.TestCase):
 
+    global admin
+    admin = AdminClient({'bootstrap.servers':'localhost:9092'})
 
+    # check_topic
+    def check_topic_true(self):
+        import kafka_topic
+        topic = kafka_topic.check_topic(topic="foo.two")
+        self.assertTrue(topic)
+
+    def check_topic_false(self):
+        import kafka_topic
+        topic = kafka_topic.check_topic(topic="foo")
+        self.assertFalse(topic)
+
+    # compare_part_rep
+    def compare_part_rep_true(self):
+        import kafka_topic
+        change = kafka_topic.compare_part_rep(topic="foo.two", partitions=3, replication_factor=1)
+        self.assertTrue(change)
+
+    def compare_part_rep_fail(self):
+        import kafka_topic
+        mo = mock.Mock()
+        mo.fail_module()
+        change = kafka_topic.compare_part_rep(topic="foo.two", partitions=3, replication_factor=2)
+        mo.fail_module.assert_called()
+
+    # compare_config
+    def compare_config_true(self):
+        import kafka_topic
+        change = kafka_topic.compare_config(topic="foo.two", new_config={retention.ms:90001})
+        self.assertTrue(change)
+
+    def compare_config_false(self):
+        import kafka_topic
+        change = kafka_topic.compare_config(topic="foo.two", new_config={retention.ms:604800000})
+
+
+    # modify_config
+    def modify_config_test(self):
+        import kafka_topic
+        kafka_topic.modify_config(topic="foo.two", new_config={retention.ms:604800000})
+
+    def modify_config_fail(self):
+        import kafka_topic
+        mo = mock.Mock()
+        mo.fail_module()
+        kafka_topic.modify_config(topic="foo.two", new_config={cleanup.policy:True})
+        mo.fail_module.assert_called()
+
+    # create_topic
+    def create_topic_test(self).
+        import kafka_topic
+        kafka_topic.create_topic(topic="foobar", partitions=2, replication_factor=2)
+
+    def create_topic_fail(self):
+        import kafka_topic
+        mo = mock.Mock()
+        mo.fail_module()
+        kafka_topic.create_topic(topic="foobarbar", partitions=0, replication_factor=2)
+        mo.fail_module.assert_called()
+
+    # delete_topic
+    def delete_topic_test(self):
+        import kafka_topic
+        kafka_topic.delete_topic(topic="foobar", partitions=2, replication_factor=2)
+
+    def delete_topic_fail(self):
+        import kafka_topic
+        mo = mock.Mock()
+        mo.fail_module()
+        kafka_topic.delete_topic(topic="foobarbar", partitions=2, replication_factor=2)
+        mo.fail_module.assert_called()
+
+    # add_config_together
+    def add_config_together_test(self):
+        import kafka_topic
+        kafka_topic.add_config_together(module)
 
 class TestAnsibleClass(unittest.TestCase):
+
+    global module
+    module = AnsibleModule()
+
     # fail_module
     def fail_module_test(self):
         fail_module(message="Test is successfull")
