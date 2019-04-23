@@ -149,13 +149,13 @@ class TestKafkaClass(unittest.TestCase):
     # delete_topic
     def delete_topic_test(self):
         import kafka_topic
-        kafka_topic.delete_topic(topic="foobar", partitions=2, replication_factor=2)
+        kafka_topic.delete_topic(topic="foobar")
 
     def delete_topic_fail(self):
         import kafka_topic
         mo = mock.Mock()
         mo.fail_module()
-        kafka_topic.delete_topic(topic="foobarbar", partitions=2, replication_factor=2)
+        kafka_topic.delete_topic(topic="foobarbar")
         mo.fail_module.assert_called()
 
     # add_config_together
