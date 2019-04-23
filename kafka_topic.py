@@ -124,3 +124,26 @@ state:
   returned: success
 '''
 
+from ansible.module_utils.basic import AnsibleModule
+from confluent_kafka.admin import AdminClient, NewTopic, NewPartitions, ConfigResource
+
+import re
+import socket
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
