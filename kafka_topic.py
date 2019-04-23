@@ -112,3 +112,15 @@ EXAMPLES = '''
       - 143.34.62.87:45078
     cleanup_policy: compact
 '''
+RETURN = '''
+---
+name:
+  description: name of the targeted topic
+  type: string
+  returned: always
+state:
+  description: state of the targeted topic
+  type: string
+  returned: success
+'''
+
