@@ -77,4 +77,38 @@ options:
     default: 604800000ms (==7d)
     type: str
 '''
+EXAMPLES = '''
+---
+#create new topic
+- name: create topic "foo"
+  kafka_topic:
+    name: foo
+    state: present
+    partitions: 2
+    replication_factor: 2
+    bootstrap_server:
+      - localhost:9092
+      - 10.10.4.5:5678
 
+#modify topic
+- name: modify topic "foo"
+  kafka_topic:
+    name: foo
+    state: present
+    partitions: 2
+    replication_factor: 2
+    bootstrap_server:
+      - 127.0.0.4:1234
+    retention: 2d12h
+
+#delete topic
+- name: delete topic "bar"
+  kafka_topic:
+    name: bar
+    state: absent
+    partitions: 1
+    replication_factor: 1
+    bootstrap_server:
+      - 143.34.62.87:45078
+    cleanup_policy: compact
+'''
