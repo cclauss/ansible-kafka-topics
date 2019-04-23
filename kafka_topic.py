@@ -130,16 +130,89 @@ from confluent_kafka.admin import AdminClient, NewTopic, NewPartitions, ConfigRe
 import re
 import socket
 
+##########################################
+#                                        #
+#       INPUT-VALIDATION-FUNCTIONS       #
+#                                        #
+##########################################
+
+def validate_name(name):
+    pass
 
 
+def validate_factor(factor, part_or_rep):
+    pass
 
 
+def validate_broker(broker_definition):
+    pass
 
 
+def validate_ipv4(broker):
+    pass
 
 
+def validate_port(port):
+    pass
 
 
+def validate_retention_ms(retention):
+    pass
+
+
+##########################################
+#                                        #
+#           KAFKA-FUNCTIONS              #
+#                                        #
+##########################################
+
+def check_topic(topic):
+    pass
+
+
+def compare_part_rep(topic, partitions, replication_factor).
+    pass
+
+
+def compare_config(topic, new_config):
+    pass
+
+
+def modify_config(topic, new_config):
+    pass
+
+
+def modify_part(topic, new_part):
+    pass
+
+
+def create_topic(topic, partitions, replication_factor):
+    pass
+
+
+def delete_topic(topic):
+    pass
+
+
+def add_config_together(module):
+    pass
+
+
+##########################################
+#                                        #
+#           ANSIBLE-FUNCTIONS            #
+#                                        #
+##########################################
+
+def fail_module(module):
+    pass
+
+
+##########################################
+#                                        #
+#                 MAIN                   #
+#                                        #
+##########################################
 
 
 
