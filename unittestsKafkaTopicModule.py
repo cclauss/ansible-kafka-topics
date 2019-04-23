@@ -3,6 +3,7 @@
 import unittest
 import mock
 from confluent_kafka.admin import AdminClient
+from ansible.module_utils.basic import AnsibleModule
 
 class TestValidateClass(unittest.TestCase):
     # validate_name
@@ -22,7 +23,7 @@ class TestValidateClass(unittest.TestCase):
         import kafka_topic
         kafka_topic.validate_factor(factor=3,part_or_rep="partition")
 
-    def validate_factor_fail(self).
+    def validate_factor_fail(self):
         import kafka_topic
         mo = mock.Mock()
         mo.fail_module()
@@ -32,27 +33,27 @@ class TestValidateClass(unittest.TestCase):
     # validate_broker
     def validate_broker_test(self):
         import kafka_topic
-        broker = validate_broker(broker_definition=[localhost:9092])
+        broker = validate_broker(broker_definition=["localhost:9092"])
         self.assertEqual(broker,"localhost:9092")
 
     def validate_broker_fail(self):
         import kafka_topic
         mo = mock.Mock()
         mo.fail_module()
-        broker = validate_broker(broker_definition=[12:9092])
+        broker = validate_broker(broker_definition=["12:9092"])
         mo.fail_module.assert_called()
 
     # validate_ipv4
     def validate_ipv4_test(self):
         import kafka_topic
-        broker = kafka_topic.validate_ipv4(broker=[127.0.0.3:9092])
+        broker = kafka_topic.validate_ipv4(broker=["127.0.0.3:9092"])
         self.assertEqual(broker, "127.0.0.3:9092")
 
     def validate_ipv4_fail(self):
         import kafka_topic
         mo = mock.Mock()
         mo.fail_module()
-        broker = kafka_topic.validate_ipv4(broker=[localhost:9095])
+        broker = kafka_topic.validate_ipv4(broker=["localhost:9095"])
         mo.fail_module.assert_called()
 
     # validate_port
@@ -134,7 +135,7 @@ class TestKafkaClass(unittest.TestCase):
         mo.fail_module.assert_called()
 
     # create_topic
-    def create_topic_test(self).
+    def create_topic_test(self):
         import kafka_topic
         kafka_topic.create_topic(topic="foobar", partitions=2, replication_factor=2)
 
@@ -165,7 +166,9 @@ class TestKafkaClass(unittest.TestCase):
 class TestAnsibleClass(unittest.TestCase):
 
     global module
-    module = AnsibleModule()
+    module = AnsibleModule(
+        argument_spec = dict()
+    )
 
     # fail_module
     def fail_module_test(self):
