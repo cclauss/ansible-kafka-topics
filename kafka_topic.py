@@ -141,14 +141,31 @@ def validate_name(name):
     rema = re.match(r"^([a-z][a-z\d-]+(\.[a-z][a-z\d-]+)*|app\.[a-z]{2,})(\.[A-Z][A-Za-z\d]+(\.v[1-9][0-9]*)?)?(-(state|command|event)(\.state|\.command|\.event)*)?(-[a-z][a-z0-9]*)?(-from\.(test|int|prod))?$
 ", name).group(0)
     if not rema or len(rema) > max_length:
-        msg = ("Invalid name for topic."\
-             " Valid characters are: a-z, A-Z, 0-9, \".\",\"-\",\"_\"."\
+        msg = ("Invalid name for topic." \
+             " Valid characters are: a-z, A-Z, 0-9, \".\",\"-\",\"_\"." \
              " Also check out the Topic-Grammar from the ISVC-Project."
             )
         fail_module(msg)
 
 
 def validate_factor(factor, part_or_rep):
+    try:
+        factor = int(factor)
+    except ValueError:
+        msg = ("Value from %s must be an int." \
+              " You tried to set %s as factor." \
+              %(part_or_rep, factor)
+              )
+        fail_module(msg)
+        if factor <= 0:
+            msg = ("Value from %s must be a positive int." \
+                  " You tried to set %s as factor." \
+                  %(part_or_rep, factor)
+                  )
+            fail_module(msg)
+
+
+
     pass
 
 
