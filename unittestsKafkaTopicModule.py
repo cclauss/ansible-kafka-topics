@@ -46,14 +46,14 @@ class TestValidateClass(unittest.TestCase):
     # validate_ipv4
     def test_validate_ipv4_TVF3_2(self):
         import kafka_topic
-        broker = kafka_topic.validate_ipv4(broker=["127.0.0.3:9092"])
+        broker = kafka_topic.validate_ipv4(broker=["127.0.0.3","9092"])
         self.assertEqual(broker, "127.0.0.3:9092")
 
     def test_validate_ipv4_fail_NTVF3_2(self):
         import kafka_topic
         mo = mock.Mock()
         mo.fail_module()
-        broker = kafka_topic.validate_ipv4(broker=["localhost:9095"])
+        broker = kafka_topic.validate_ipv4(broker=["localhost","9095"])
         mo.fail_module.assert_called()
 
     # validate_port

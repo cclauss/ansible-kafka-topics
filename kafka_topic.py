@@ -146,7 +146,7 @@ def validate_name(name):
               " Valid characters are: a-z, A-Z, 0-9, \".\",\"-\",\"_\"" \
               " and a max-length of %s characters." \
               " Also check out the Topic-Grammar from the ISVC-Project." \
-              %(max_lenght)
+              %(max_length)
               )
         fail_module(msg)
 
@@ -211,7 +211,7 @@ def validate_ipv4(broker):
 
 def validate_port(port):
     try:
-        int(port)
+        port = int(port)
     except ValueError:
         msg = ("Port needs to be int, but got: %s" \
               %(port)
@@ -223,7 +223,7 @@ def validate_port(port):
               %(port)
               )
         fail_module(msg)
-    return(port)
+    return port
 
 
 def validate_retention_ms(retention):
