@@ -283,7 +283,23 @@ def check_topic(topic):
 
 
 def compare_part_rep(topic, partitions, replication_factor):
-    pass
+    metadata = admin.list_topics()
+    old_part = len(metadata.topics[topic].partitions)
+    old_rep = len(metadata.topics[topic].partitions[0].replicas)
+    if partitions < old_part:
+        msg = ("It is not possible to reduce the amount of partitions." \
+              " At the moment, there are %s partitions for the topic %s." \
+              " You tried to set %s as the new amount of partitions." \
+              %(old_part,topic,partitions)
+              )
+    if replication_factor != old_rep:
+        msg = ("It is not possible to modify the replication_factor." \
+              " At the moment, it is set to %s and you tried to set it to %s." \
+              %(old_rep,replicatin_factor)
+              )
+    if partitions == old_part:
+        return False
+    return True
 
 
 def compare_config(topic, new_config):
