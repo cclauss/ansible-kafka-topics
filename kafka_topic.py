@@ -165,10 +165,6 @@ def validate_factor(factor, part_or_rep):
             fail_module(msg)
 
 
-
-    pass
-
-
 def validate_broker(broker_definition):
     pass
 
