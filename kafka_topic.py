@@ -204,8 +204,8 @@ def add_config_together(module):
 #                                        #
 ##########################################
 
-def fail_module(module):
-    pass
+def fail_module(msg):
+    module.fail_json(msg, **result)
 
 
 ##########################################
