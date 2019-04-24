@@ -232,6 +232,14 @@ def validate_retention_ms(retention):
 
     rema = re.match( r"(?P<days>\d+d)?(?P<hours>\d+h)?(?P<minutes>\d+m)?(?P<seconds>\d+s)?(?P<miliseconds>\d+m)?",retention)
 
+    t = rema.span()
+    if t[1] == 0:
+        msg = ("Could not parse given retention-time: %s into ms." \
+              " Please use the following pattern: %%d%%h%%m%%s%%ms." \
+              %(retention)
+              )
+        fail_module(msg)
+
     days = rema.group("days")
     hours = rema.group("hours")
     minutes = rema.group("minutes")
@@ -244,8 +252,8 @@ def validate_retention_ms(retention):
     i = 0
 
     for t_type in timetype:     #convert to ms and add together
-        if t_type is not none:
-            ms_total = ms_total + t_type*multiplier[i]
+        if t_type is not None:
+            ms_total = ms_total + (int(t_type[:-1])*multiplier[i])     #[:-1] cuts of last char (which indicates timetype and is not an int)
         i = i+1
 
     if (ms_total >= 2**63):
@@ -313,7 +321,29 @@ def fail_module(msg):
 #                                        #
 ##########################################
 
+def main():
 
+    global module
+
+    module_args = dict(
+        name = dict(type='str', required=True),
+        state = dict(type='str', required=True, choices=['absent','present']),
+        partitions = dict(type='int', required=True),
+        replication_factor = dict(type='int', required=True),
+        bootstrap_server = dict(type='list', required=True),
+        cleanup_policy = dict(type='str', choices=['compact','delete']),
+        retention = dict(type='str')
+    )
+
+    result = dict(
+        changed = False,
+        name = '',
+        state = ''
+    )
+
+    module = AnsibleModule(
+        argument_spec=module_args,
+    )
 
 
 
