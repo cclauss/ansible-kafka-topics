@@ -135,6 +135,19 @@ class TestKafkaClass(unittest.TestCase):
         mo.fail_module.assert_called()
 
 
+    # modify_part
+    def test_modify_part_TKF5(self):
+        import kafka_topic
+        kafka_topic.modify_part(topic="foo.two", new_part = 3)
+
+    def test_modify_part_fail_NTKF5(self):
+        import kafka_topic
+        mo = mock.Mock()
+        mo.fail_module()
+        kafka_topic.modify_part(topic="foo.two", new_part = 2)
+        mo.fail_module.assert_called()
+
+
     # create_topic
     def test_create_topic_TKF6(self):
         import kafka_topic
