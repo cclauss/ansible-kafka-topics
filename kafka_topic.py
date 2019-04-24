@@ -338,7 +338,7 @@ def compare_config(topic, new_config):
     y = list(des.values())
     old_conf = y[0].result()
 
-    for config, newvalue in new_conf.items():
+    for config, newvalue in new_conf.items():       #iterate trough new-config-dict and compare with old-config-dict, using config as key
         if newvalue != old_conf[config].value:
             return True
 
@@ -357,14 +357,14 @@ def modify_config(topic, new_config):
     y = list(des.values())
     old_conf = y[0].result()
 
-    for config, newvalue in new_conf.items():
+    for config, newvalue in new_conf.items():       #iterate trough new-config-dict and set them on topic-resource
         resource[0].set_config(config,newvalue)
 
-    des = admin.alter_configs(resource)
+    des = admin.alter_configs(resource)             #alter topic with new config
     y = list(des.values())
 
     try:
-        conf = y[0].result()
+        conf = y[0].result()                        #use .result-func for finalizing
     except Exception:
         msg = ("Failed to finalize config-change for topic %s" \
               %(topic)
@@ -372,24 +372,76 @@ def modify_config(topic, new_config):
         fail_module(msg)
 
 
+# modify partition
+# param: topic = topicname, type: str
+# param: new_part = int representing new number of partitions
+# return: no return
 def modify_part(topic, new_part):
     new_parts = [NewPartitions(topic, new_part)]
     fs = admin.create_partitions(new_parts, validate_only=False)
 
     y = list(fs.values())
-    conf = y[0].result()
+
+    try:
+        conf = y[0].result()
+    except Exception:
+        msg = ("Failed to finalize partition-change for topic %s" \
+              %(topic)
+              )
+        fail_module(msg)
 
 
+# create a new topic, setting partition and replication-factor right now
+# param: topic = topicname, type: str
+# param: partitions = number of partitions, type: int
+# param: replication_factor = number of replicatons, which is from then on immutable, type: int
+# return: no return
 def create_topic(topic, partitions, replication_factor):
-    pass
+    topic = [NewTopic(topicname, num_partitions=partitions,  replication_factor=replication_factor)]
+    fs = admin.create_topics(topic)
+
+    y = list(fs.values())
+
+    try:
+        new_topic = y[0].result()
+    except Exception:
+        msg = ("Failed to create topic %s." \
+              %(topic)
+              )
+        fail_module(msg)
 
 
+# delete topic, this func only needs the topicname
+# param: topic = topicname, type: str
+# return: no return
 def delete_topic(topic):
-    pass
+    topic = [topic]
+    fs = admin.delete_topic(topic)
+
+    y = list(fs.values())
+
+    try:
+        deleted_topic = y[0].result()
+    except Exception:
+        msg = ("Failed to delete topic %s." \
+              %(topic)
+              )
+        fail_module(msg)
 
 
+# add different configs together in one dictionary for passing to compare-config and modify-config
+# param: module = AnsibleModule, containing the possible configs
+# return: new_config = dictionary containing all set configs, type: dict
 def add_config_together(module):
-    pass
+    configs = {
+        "cleanup.policy":module.params["cleanup_policy"],
+        "retention.ms":module.params["retention"]
+    }
+    new_conf = {}
+    for conf, value in config.items():
+        if configs[conf] is not None:
+            new_conf[conf] = value
+    return new_conf
 
 
 ##########################################
