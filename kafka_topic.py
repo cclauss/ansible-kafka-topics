@@ -294,7 +294,7 @@ def validate_retention_ms(retention):
 # param: topic = topicname, type: str
 # return: True if topic exists, False if not, type: bool
 def check_topic(topic):
-    topics = admin.list_topics(timeout=5).topics
+    topics = admin.list_topics(timeout=5).topics    #type(topics)=dict
     try:
         topics[topic]
     except KeyError:
@@ -306,11 +306,11 @@ def check_topic(topic):
 # param: topic = topicname, type: str
 # param: partitions, type: int
 # param: replication_factor, type: int
-# return: True if change is needed, False if everything can stay the same, type: bool
+# return: True if change is needed, False if no change needed, type: bool
 def compare_part_rep(topic, partitions, replication_factor):
-    metadata = admin.list_topics()
-    old_part = len(metadata.topics[topic].partitions)
-    old_rep = len(metadata.topics[topic].partitions[0].replicas)
+    metadata = admin.list_topics()                                    #type(metadata.topics) = dict
+    old_part = len(metadata.topics[topic].partitions)                 #access partitions of topic over .partitions-func
+    old_rep = len(metadata.topics[topic].partitions[0].replicas)      #type(partitions) = dict, access replicas with partition-id as key over .replicas-func
     if partitions < old_part:
         msg = ("It is not possible to reduce the amount of partitions." \
               " At the moment, there are %s partitions for the topic %s." \
@@ -327,12 +327,49 @@ def compare_part_rep(topic, partitions, replication_factor):
     return True
 
 
+# compare the defined config in the playbook with the one set at the moment for this topic
+# param: topic = topicname, type: str
+# param: new_config = dictionary with new config and values, type: dict
+# return: True if change is needed, False if no change is needed, type: bool
 def compare_config(topic, new_config):
-    pass
+    resource = [ConfigResource("TOPIC", topic)]
+    des = admin.describe_configs(resources)
+
+    y = list(des.values())
+    old_conf = y[0].result()
+
+    for config, newvalue in new_conf.items():
+        if newvalue != old_conf[config].value:
+            return True
+
+    return False
 
 
+
+# modify config
+# param: topic = topicname, type: str
+# param: new_config = dictionary with new config and values, type: dict
+# return: no return
 def modify_config(topic, new_config):
-    pass
+    resource = [ConfigResource("TOPIC", topic)]
+    des = admin.describe_configs(resources)
+
+    y = list(des.values())
+    old_conf = y[0].result()
+
+    for config, newvalue in new_conf.items():
+        resource[0].set_config(config,newvalue)
+
+    des = admin.alter_configs(resource)
+    y = list(des.values())
+
+    try:
+        conf = y[0].result()
+    except Exception:
+        msg = ("Failed to finalize config-change for topic %s" \
+              %(topic)
+              )
+        fail_module(msg)
 
 
 def modify_part(topic, new_part):
