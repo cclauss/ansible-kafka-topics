@@ -136,8 +136,12 @@ import socket
 #                                        #
 ##########################################
 
+# validate name for topic
+# param: name = topicname, type: str
+# no return
 def validate_name(name):
     max_length = 249
+    #regex for checking if topicname matches topic-name-grammar set from the ISVC-Project
     rema = re.match(r"^([a-z][a-z\d-]+(\.[a-z][a-z\d-]+)*|app\.[a-z]{2,})(\.[A-Z][A-Za-z\d]+(\.v[1-9][0-9]*)?)?(-(state|command|event)(\.state|\.command|\.event)*)?(-[a-z][a-z0-9]*)?(-from\.(test|int|prod))?$", name)
     if rema:
         rema = rema.group(0)
@@ -150,7 +154,10 @@ def validate_name(name):
               )
         fail_module(msg)
 
-
+# validate partition-number and replication-number
+# param: factor = number for partitions or replication, type:int
+# param: part_or_rep = which gets validated for error-message if needed, type: str
+# no return
 def validate_factor(factor, part_or_rep):
     try:
         factor = int(factor)
@@ -167,7 +174,9 @@ def validate_factor(factor, part_or_rep):
                   )
             fail_module(msg)
 
-
+# validate broker-definition
+# param: broker_definition, type:list, pattern per broker: 'host:port'
+# returns brokers as a string with following pattern: 'host:port,host:port'
 def validate_broker(broker_definition):
     broker_def_list = []
     for broker in broker_definition:
@@ -191,12 +200,15 @@ def validate_broker(broker_definition):
     final_broker_definition = ",".join(broker_def_list)
     return final_broker_definition
 
-
+# validate ipv4-address, trying to build a tcp-connection to given address
+# param: broker = one broker-definition, type: list, pattern: [host,port]
+# return: broker, type: str, pattern: 'host:port'
 def validate_ipv4(broker):
     port = validate_port(broker[1])
     ip = broker[0]
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
+        #try to make a connection
         sock.connect((ip,port))
         sock.close()
     except socket.error:
@@ -208,7 +220,9 @@ def validate_ipv4(broker):
         fail_module(msg)
     return str(ip)+":"+str(port)
 
-
+# validate port
+# param: port, type: str
+# return: port, type: int
 def validate_port(port):
     try:
         port = int(port)
@@ -225,11 +239,14 @@ def validate_port(port):
         fail_module(msg)
     return port
 
-
+# validate retention time and convert to ms
+# param: retention = retention-time, type: str, pattern: %d%h%m%s%ms
+# return: retention-time in ms unless set to unlimited, type: int or string
 def validate_retention_ms(retention):
     if retention == "-1":     #sets retention-time to unlimited
         return retention
 
+    #try to parse retention with regex into groups, split by timetype
     rema = re.match( r"(?P<days>\d+d)?(?P<hours>\d+h)?(?P<minutes>\d+m)?(?P<seconds>\d+s)?(?P<miliseconds>\d+m)?",retention)
 
     t = rema.span()
@@ -273,6 +290,9 @@ def validate_retention_ms(retention):
 #                                        #
 ##########################################
 
+# check if topic exists
+# param: topic = topicname, type: str
+# return: True if topic exists, False if not, type: bool
 def check_topic(topic):
     topics = admin.list_topics(timeout=5).topics
     try:
@@ -282,6 +302,11 @@ def check_topic(topic):
     return True
 
 
+# compare the defined partitions and replication-factor in the playbook with the actually set
+# param: topic = topicname, type: str
+# param: partitions, type: int
+# param: replication_factor, type: int
+# return: True if change is needed, False if everything can stay the same, type: bool
 def compare_part_rep(topic, partitions, replication_factor):
     metadata = admin.list_topics()
     old_part = len(metadata.topics[topic].partitions)
@@ -311,7 +336,11 @@ def modify_config(topic, new_config):
 
 
 def modify_part(topic, new_part):
-    pass
+    new_parts = [NewPartitions(topic, new_part)]
+    fs = admin.create_partitions(new_parts, validate_only=False)
+
+    y = list(fs.values())
+    conf = y[0].result()
 
 
 def create_topic(topic, partitions, replication_factor):
