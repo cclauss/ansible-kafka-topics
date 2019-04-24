@@ -189,7 +189,7 @@ class TestAnsibleClass(unittest.TestCase):
     # fail_module
     def test_fail_module_TAK1(self):
         import kafka_topic
-        kafka_topic.fail_module(message="Test is successfull")
+        kafka_topic.fail_module(msg="Test is successfull")
 
 if __name__ == '__main__':
     unittest.main()
