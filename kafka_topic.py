@@ -193,7 +193,20 @@ def validate_broker(broker_definition):
 
 
 def validate_ipv4(broker):
-    pass
+    port = validate_port(broker[1])
+    ip = broker[0]
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        sock.connect((ip,port))
+        sock.close()
+    except socket.error:
+        sock.close()
+        msg = ("Can not connect to broker: %s" \
+              " Please check if the definition is right." \
+              %(broker)
+              )
+        fail_module(msg)
+    return str(ip)+":"+str(port)
 
 
 def validate_port(port):
