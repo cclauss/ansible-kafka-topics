@@ -143,9 +143,11 @@ def validate_name(name):
         rema = rema.group(0)
     if not rema or len(rema) > max_length:
         msg = ("Invalid name for topic." \
-             " Valid characters are: a-z, A-Z, 0-9, \".\",\"-\",\"_\"." \
-             " Also check out the Topic-Grammar from the ISVC-Project."
-            )
+              " Valid characters are: a-z, A-Z, 0-9, \".\",\"-\",\"_\"" \
+              " and a max-length of %s characters." \
+              " Also check out the Topic-Grammar from the ISVC-Project." \
+              %(max_lenght)
+              )
         fail_module(msg)
 
 
