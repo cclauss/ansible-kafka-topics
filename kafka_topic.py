@@ -227,7 +227,36 @@ def validate_port(port):
 
 
 def validate_retention_ms(retention):
-    pass
+    if retention == "-1":     #sets retention-time to unlimited
+        return retention
+
+    rema = re.match( r"(?P<days>\d+d)?(?P<hours>\d+h)?(?P<minutes>\d+m)?(?P<seconds>\d+s)?(?P<miliseconds>\d+m)?",retention)
+
+    days = rema.group("days")
+    hours = rema.group("hours")
+    minutes = rema.group("minutes")
+    seconds = rema.group("seconds")
+    miliseconds = rema.group("miliseconds")
+
+    timetype = [days, hours, minutes, seconds, miliseconds]
+    multiplier = [86400000,3600000,60000,1000,1]
+    ms_total = 0
+    i = 0
+
+    for t_type in timetype:     #convert to ms and add together
+        if t_type is not none:
+            ms_total = ms_total + t_type*multiplier[i]
+        i = i+1
+
+    if (ms_total >= 2**63):
+        msg = ("Your chosen retention-time is way too long." \
+              " Retention-time can not be over 2^63ms." \
+              " You set %s as retention, which results in %s ms." \
+              %(retention, ms_total)
+              )
+        fail_module(msg)
+
+    return ms_total
 
 
 ##########################################
