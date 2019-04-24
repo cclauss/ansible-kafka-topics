@@ -4,6 +4,7 @@ import unittest
 import mock
 from confluent_kafka.admin import AdminClient
 from ansible.module_utils.basic import AnsibleModule
+#import config
 
 class TestValidateClass(unittest.TestCase):
     # validate_name
@@ -15,7 +16,7 @@ class TestValidateClass(unittest.TestCase):
         import kafka_topic
         mo = mock.Mock()
         mo.fail_module()
-        kafka_topic.validate_name(name="topic:topic")
+        self.assertRaises(Exception, kafka_topic.validate_name, name="topic:topic")
         mo.fail_module.assert_called()
 
     # validate_factor
@@ -27,7 +28,7 @@ class TestValidateClass(unittest.TestCase):
         import kafka_topic
         mo = mock.Mock()
         mo.fail_module()
-        kafka_topic.validate_factor(factor=2.1, part_or_rep="partition")
+        self.assertRaises(Exception, kafka_topic.validate_factor, factor=2.1, part_or_rep="partition")
         mo.fail_module.assert_called()
 
     # validate_broker
@@ -40,7 +41,7 @@ class TestValidateClass(unittest.TestCase):
         import kafka_topic
         mo = mock.Mock()
         mo.fail_module()
-        broker = kafka_topic.validate_broker(broker_definition=["12:9092"])
+        self.assertRaises(Exception, broker = kafka_topic.validate_broker, broker_definition=["12:9092"])
         mo.fail_module.assert_called()
 
     # validate_ipv4
@@ -53,7 +54,7 @@ class TestValidateClass(unittest.TestCase):
         import kafka_topic
         mo = mock.Mock()
         mo.fail_module()
-        broker = kafka_topic.validate_ipv4(broker=["localhost","9095"])
+        self.assertRaises(Exception, new_broker = kafka_topic.validate_ipv4, broker=["localhost","9095"])
         mo.fail_module.assert_called()
 
     # validate_port
@@ -66,7 +67,7 @@ class TestValidateClass(unittest.TestCase):
         import kafka_topic
         mo = mock.Mock()
         mo.fail_module()
-        port = kafka_topic.validate_port(port="70123")
+        self.assertRaises(Exception, new_port = kafka_topic.validate_port, port="70123")
         mo.fail_module.assert_called()
 
     # validate_retention_ms
@@ -79,7 +80,7 @@ class TestValidateClass(unittest.TestCase):
         import kafka_topic
         mo = mock.Mock()
         mo.fail_module()
-        retention = kafka_topic.validate_retention_ms(retention="-7d")
+        self.assertRaises(Exception, new_retention = kafka_topic.validate_retention_ms, retention="-7d")
         mo.fail_module.assert_called()
 
 class TestKafkaClass(unittest.TestCase):
@@ -108,30 +109,31 @@ class TestKafkaClass(unittest.TestCase):
         import kafka_topic
         mo = mock.Mock()
         mo.fail_module()
-        change = kafka_topic.compare_part_rep(topic="foo.two", partitions=3, replication_factor=2)
+        self.assertRaises(Exception, change = kafka_topic.compare_part_rep, topic="foo.two", partitions=3, replication_factor=2)
         mo.fail_module.assert_called()
 
     # compare_config
     def test_compare_config_true_TKF3(self):
         import kafka_topic
-        change = kafka_topic.compare_config(topic="foo.two", new_config={retention.ms:90001})
+        change = kafka_topic.compare_config(topic="foo.two", new_config={"retention.ms":"90001"})
         self.assertTrue(change)
 
     def test_compare_config_false_NTKF3(self):
         import kafka_topic
-        change = kafka_topic.compare_config(topic="foo.two", new_config={retention.ms:604800000})
+        change = kafka_topic.compare_config(topic="foo.two", new_config={"retention.ms":"604800000"})
+        self.assertFalse(change)
 
 
     # modify_config
     def test_modify_config_TKF4(self):
         import kafka_topic
-        kafka_topic.modify_config(topic="foo.two", new_config={retention.ms:604800000})
+        kafka_topic.modify_config(topic="foo.two", new_config={"retention.ms":"604800000"})
 
     def test_modify_config_fail_NTKF4(self):
         import kafka_topic
         mo = mock.Mock()
         mo.fail_module()
-        kafka_topic.modify_config(topic="foo.two", new_config={cleanup.policy:True})
+        self.assertRaises(Exception, kafka_topic.modify_config, topic="foo.two", new_config={"cleanup.policy":"True"})
         mo.fail_module.assert_called()
 
 
@@ -144,7 +146,7 @@ class TestKafkaClass(unittest.TestCase):
         import kafka_topic
         mo = mock.Mock()
         mo.fail_module()
-        kafka_topic.modify_part(topic="foo.two", new_part = 2)
+        self.assertRaises(Exception, kafka_topic.modify_part, topic="foo.two", new_part = 2)
         mo.fail_module.assert_called()
 
 
@@ -157,7 +159,7 @@ class TestKafkaClass(unittest.TestCase):
         import kafka_topic
         mo = mock.Mock()
         mo.fail_module()
-        kafka_topic.create_topic(topic="foobarbar", partitions=0, replication_factor=2)
+        self.assertRaises(Exception, kafka_topic.create_topic, topic="foobarbar", partitions=0, replication_factor=2)
         mo.fail_module.assert_called()
 
     # delete_topic
@@ -169,27 +171,19 @@ class TestKafkaClass(unittest.TestCase):
         import kafka_topic
         mo = mock.Mock()
         mo.fail_module()
-        kafka_topic.delete_topic(topic="foobarbar")
+        self.assertRaises(Exception, kafka_topic.delete_topic, topic="foobarbar")
         mo.fail_module.assert_called()
 
     # add_config_together
-    def test_add_config_together_TKF8(self):
-        import kafka_topic
-        kafka_topic.add_config_together(module)
+#    def test_add_config_together_TKF8(self):
+#        import kafka_topic
+#        self.assertRaises(Exception, kafka_topic.add_config_together, module)
 
 class TestAnsibleClass(unittest.TestCase):
-#
-#    global module
-#    module = AnsibleModule(
-#        argument_spec = dict(
-#              name=dict(type='str', required=True)
-#          )
-#    )
-#
     # fail_module
     def test_fail_module_TAK1(self):
         import kafka_topic
-        kafka_topic.fail_module(msg="Test is successfull")
+        self.assertRaises(Exception, kafka_topic.fail_module, msg="Test is successfull")
 
 if __name__ == '__main__':
     unittest.main()

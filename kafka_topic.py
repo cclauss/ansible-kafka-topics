@@ -312,7 +312,7 @@ def add_config_together(module):
 ##########################################
 
 def fail_module(msg):
-    module.fail_json(msg, **result)
+    module.fail_json(msg=msg, **result)
 
 
 ##########################################
@@ -324,6 +324,7 @@ def fail_module(msg):
 def main():
 
     global module
+    global result
 
     module_args = dict(
         name = dict(type='str', required=True),
@@ -345,7 +346,8 @@ def main():
         argument_spec=module_args,
     )
 
+    validate_name(module.params['name'])
 
 
-
-
+if __name__ == '__main__':
+    main()
