@@ -274,7 +274,12 @@ def validate_retention_ms(retention):
 ##########################################
 
 def check_topic(topic):
-    pass
+    topics = admin.list_topics(timeout=5).topics
+    try:
+        topics[topic]
+    except KeyError:
+        return False
+    return True
 
 
 def compare_part_rep(topic, partitions, replication_factor):
