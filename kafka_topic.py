@@ -210,7 +210,20 @@ def validate_ipv4(broker):
 
 
 def validate_port(port):
-    pass
+    try:
+        int(port)
+    except ValueError:
+        msg = ("Port needs to be int, but got: %s" \
+              %(port)
+              )
+        fail_module(msg)
+    if (port <= 0) or (port > 65535):
+        msg = ("Valid Port-Range is: 1-65535." \
+              " But given Port is: %s" \
+              %(port)
+              )
+        fail_module(msg)
+    return(port)
 
 
 def validate_retention_ms(retention):
