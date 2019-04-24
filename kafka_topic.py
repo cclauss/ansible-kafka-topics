@@ -165,7 +165,27 @@ def validate_factor(factor, part_or_rep):
 
 
 def validate_broker(broker_definition):
-    pass
+    broker_def_list = []
+    for broker in broker_definition:
+        broker_parts = broker.split(":")
+        if len(broker_parts) == 2:
+            broker = validate_ipv4(broker_parts)
+        if len(broker_parts) > 2:
+            msg = ("It seems you tried so set an IPv6-Address: %s" \
+                  " We do not support that so far - please set" \
+                  " an IPv4-Address." \
+                  %(broker)
+                  )
+            fail_module(msg)
+        if len(broker_parts) < 2:
+            msg = ("Broker-Definition does not seem to be valid: %s" \
+                  " Use following pattern per broker: host:port." \
+                  %(broker)
+                  )
+            fail_module(msg)
+        broker_def_list.append(broker)
+    final_broker_definition = ",".join(broker_def_list)
+    return final_broker_definition
 
 
 def validate_ipv4(broker):
