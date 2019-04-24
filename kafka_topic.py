@@ -138,7 +138,9 @@ import socket
 
 def validate_name(name):
     max_length = 249
-    rema = re.match(r"^([a-z][a-z\d-]+(\.[a-z][a-z\d-]+)*|app\.[a-z]{2,})(\.[A-Z][A-Za-z\d]+(\.v[1-9][0-9]*)?)?(-(state|command|event)(\.state|\.command|\.event)*)?(-[a-z][a-z0-9]*)?(-from\.(test|int|prod))?$", name).group(0)
+    rema = re.match(r"^([a-z][a-z\d-]+(\.[a-z][a-z\d-]+)*|app\.[a-z]{2,})(\.[A-Z][A-Za-z\d]+(\.v[1-9][0-9]*)?)?(-(state|command|event)(\.state|\.command|\.event)*)?(-[a-z][a-z0-9]*)?(-from\.(test|int|prod))?$", name)
+    if rema:
+        rema = rema.group(0)
     if not rema or len(rema) > max_length:
         msg = ("Invalid name for topic." \
              " Valid characters are: a-z, A-Z, 0-9, \".\",\"-\",\"_\"." \
