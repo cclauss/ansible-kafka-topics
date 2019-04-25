@@ -333,12 +333,12 @@ def compare_part_rep(topic, partitions, replication_factor):
 # return: True if change is needed, False if no change is needed, type: bool
 def compare_config(topic, new_config):
     resource = [ConfigResource("TOPIC", topic)]
-    des = admin.describe_configs(resources)
+    des = admin.describe_configs(resource)
 
     y = list(des.values())
     old_conf = y[0].result()
 
-    for config, newvalue in new_conf.items():       #iterate trough new-config-dict and compare with old-config-dict, using config as key
+    for config, newvalue in new_config.items():       #iterate trough new-config-dict and compare with old-config-dict, using config as key
         if newvalue != old_conf[config].value:
             return True
 
@@ -352,12 +352,12 @@ def compare_config(topic, new_config):
 # return: no return
 def modify_config(topic, new_config):
     resource = [ConfigResource("TOPIC", topic)]
-    des = admin.describe_configs(resources)
+    des = admin.describe_configs(resource)
 
     y = list(des.values())
     old_conf = y[0].result()
 
-    for config, newvalue in new_conf.items():       #iterate trough new-config-dict and set them on topic-resource
+    for config, newvalue in new_config.items():       #iterate trough new-config-dict and set them on topic-resource
         resource[0].set_config(config,newvalue)
 
     des = admin.alter_configs(resource)             #alter topic with new config
@@ -397,7 +397,7 @@ def modify_part(topic, new_part):
 # param: replication_factor = number of replicatons, which is from then on immutable, type: int
 # return: no return
 def create_topic(topic, partitions, replication_factor):
-    topic = [NewTopic(topicname, num_partitions=partitions,  replication_factor=replication_factor)]
+    topic = [NewTopic(topic, num_partitions=partitions,  replication_factor=replication_factor)]
     fs = admin.create_topics(topic)
 
     y = list(fs.values())
@@ -438,7 +438,7 @@ def add_config_together(module):
         "retention.ms":module.params["retention"]
     }
     new_conf = {}
-    for conf, value in config.items():
+    for conf, value in configs.items():
         if configs[conf] is not None:
             new_conf[conf] = value
     return new_conf
@@ -529,6 +529,9 @@ def main():
         result['changed'] = True
         result['state'] = "present"
         new_conf = add_config_together(module)
+        topic_exists = check_topic(module.params['name'])
+        while not topic_exists:
+            topic_exists = check_topic(module.params['name'])
         modify_config(module.params['name'], new_conf)
 
 
