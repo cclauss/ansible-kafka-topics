@@ -464,6 +464,7 @@ def main():
 
     global module
     global result
+    global admin
 
     module_args = dict(
         name = dict(type='str', required=True),
@@ -485,8 +486,56 @@ def main():
         argument_spec=module_args,
     )
 
+    result['name'] = module.params['name']
     validate_name(module.params['name'])
 
+    validate_factor(module.params['partitions'], "partitions")
+    validate_factor(module.params['replication_factor'], "replication-factor")
+    final_broker_definition = validate_broker(module.params['bootstrap_server'])
+
+    if module.params['retention'] is not None:
+        retention_ms = validate_retention_ms(module.params['retention'])
+        module.params['retention'] = retention_ms
+
+    admin_conf = {}
+    admin_conf['bootstrap_server'] = final_broker_definition
+
+    admin = AdminClient({'bootstrap.servers':final_broker_definition})
+
+    topic_exists = check_topic(module.params['name'])
+
+
+    if topic_exists and (module.params['state'] == "present"):
+        result['state'] == "present"
+        mod_part = compare_part_rep(module.params['name'], module.params['partitions'], module.params['replication_factor'])
+        if mod_part:
+            modify_part(module.params['name'], module.params['partitions'])
+            result['changed'] = True
+        new_conf = add_config_together(module)
+        mod_conf = compare_config(module.params['name'], new_conf)
+        if mod_conf:
+            modify_config(module.params['name'], new_conf)
+            result['changed'] = True
+
+
+    if topic_exists and (module.params['state'] == "absent"):
+        delete_topic(module.params['name'])
+        result['changed'] = True
+        result['state'] = "absent"
+
+
+    if not topic_exists and (module.params['state'] == "present"):
+        create_topic(module.params['name'], module.params['partitions'], module.params['replication_factor'])
+        result['changed'] = True
+        result['state'] = "present"
+        new_conf = add_config_together(module)
+        modify_config(module.params['name'], new_conf)
+
+
+    if not topic_exists and (module.params['state'] == "absent"):
+        result['state'] = "absent"
+
+    module.exit_json(**result)
 
 if __name__ == '__main__':
     main()
