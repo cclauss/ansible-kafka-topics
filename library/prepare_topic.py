@@ -1,66 +1,65 @@
 #! /usr/bin/env python
 
 from confluent_kafka.admin import AdminClient, NewTopic
+from time import sleep
+
+#copied functions from kafka_topic.py
+def check_topic(topic):
+    topics = admin.list_topics(timeout=5).topics
+    try:
+        topics[topic]
+    except KeyError:
+        return False
+    return True
+
+def create_topic(topic, partitions, replication_factor):
+    topic = [NewTopic(topic, num_partitions=partitions,  replication_factor=replication_factor)]
+    fs = admin.create_topics(topic)
+    y = list(fs.values())
+    new_topic = y[0].result()
+
+
+def delete_topic(topic):
+    topic = [topic]
+    fs = admin.delete_topics(topic)
+    y = list(fs.values())
+    deleted_topic = y[0].result()
+
 
 if __name__ == '__main__':
+    global admin
     admin = AdminClient({'bootstrap.servers':"localhost:9092"})
 
-    topics = admin.list_topics().topics
-
-    #topic foo
-    try:
-        topics["foo"]
-        foo_exists = True
-    except KeyError:
-        foo_exists = False
+    #make sure topic foo is deleted
+    foo_exists = check_topic("foo")
 
     if foo_exists:
-        res = admin.delete_topics(["foo"])
-        y = list(res.values())
-        final = y[0].result()
+        delete_topic("foo")
 
-    #topic foo.two
-    try:
-        topics["foo.two"]
-        footwo_exists = True
-    except KeyError:
-        footwo_exists = False
+    #make sure topic foo.two exists with right configuration
+    footwo_exists = check_topic("foo.two")
 
     if footwo_exists:
-        res = admin.delete_topics(["foo.two"])
-        y = list(res.values())
-        final = y[0].result()
+        delete_topic("foo.two")
+        while footwo_exists:
+            footwo_exists = check_topic("foo.two")
+            #print("foo.two exists: ",footwo_exists)
+            sleep(1)                                                        #sadly sleep is needed, because broker are not fast enough
+    create_topic(topic = "foo.two", partitions = 2, replication_factor=1)
 
-    topic = [NewTopic("foo.two", num_partitions=3, replication_factor=2)]
-    res = admin.create_topics(topic)
-    y = list(res.values())
-    final = y[0].result()
-
-    #topic bar
-    try:
-        topics["bar"]
-        bar_exists = True
-    except KeyError:
-        bar_exists = False
+    #make sure topic bar does not exist
+    bar_exists = check_topic("bar")
 
     if bar_exists:
-        res = admin.delete_topics(["bar"])
-        y = list(res.values())
-        final = y[0].result()
+        delete_topic("bar")
 
-    #topic foo.two
-    try:
-        topics["bar.two"]
-        bartwo_exists = True
-    except KeyError:
-        bartwo_exists = False
+    #make sure topic bar.two exists with right configuration
+    bartwo_exists = check_topic("bar.two")
 
     if bartwo_exists:
-        res = admin.delete_topics(["bar.two"])
-        y = list(res.values())
-        final = y[0].result()
-
-    topic = [NewTopic("bar.two", num_partitions=2, replication_factor=1)]
-    res = admin.create_topics(topic)
-    y = list(res.values())
-    final = y[0].result()
+        delete_topic("bar.two")
+        while bartwo_exists:
+            bartwo_exists = check_topic("bar.two")
+            #print("bar.two exists: ",bartwo_exists)
+            sleep(1)                                                          #sleep is needed because broker are not fast enough
+    create_topic(topic = "bar.two", partitions = 2, replication_factor = 1)
