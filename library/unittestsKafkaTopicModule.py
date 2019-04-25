@@ -85,12 +85,15 @@ class TestValidateClass(unittest.TestCase):
 
 class TestKafkaClass(unittest.TestCase):
 
+    import kafka_topic
     global admin
     admin = AdminClient({'bootstrap.servers':'localhost:9092'})
+    kafka_topic.admin = admin
 
     # check_topic
     def test_check_topic_true_TKF1(self):
         import kafka_topic
+        kafka_topic.admin = admin
         topic = kafka_topic.check_topic(topic="foo.two")
         self.assertTrue(topic)
 
