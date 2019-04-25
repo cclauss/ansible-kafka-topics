@@ -41,7 +41,7 @@ class TestValidateClass(unittest.TestCase):
         import kafka_topic
         mo = mock.Mock()
         mo.fail_module()
-        self.assertRaises(Exception, broker = kafka_topic.validate_broker, broker_definition=["12:9092"])
+        self.assertRaises(Exception, kafka_topic.validate_broker, broker_definition=["12:9092"])
         mo.fail_module.assert_called()
 
     # validate_ipv4
@@ -54,7 +54,7 @@ class TestValidateClass(unittest.TestCase):
         import kafka_topic
         mo = mock.Mock()
         mo.fail_module()
-        self.assertRaises(Exception, new_broker = kafka_topic.validate_ipv4, broker=["localhost","9095"])
+        self.assertRaises(Exception, kafka_topic.validate_ipv4, broker=["localhost","9095"])
         mo.fail_module.assert_called()
 
     # validate_port
@@ -67,7 +67,7 @@ class TestValidateClass(unittest.TestCase):
         import kafka_topic
         mo = mock.Mock()
         mo.fail_module()
-        self.assertRaises(Exception, new_port = kafka_topic.validate_port, port="70123")
+        self.assertRaises(Exception, kafka_topic.validate_port, port="70123")
         mo.fail_module.assert_called()
 
     # validate_retention_ms
@@ -80,7 +80,7 @@ class TestValidateClass(unittest.TestCase):
         import kafka_topic
         mo = mock.Mock()
         mo.fail_module()
-        self.assertRaises(Exception, new_retention = kafka_topic.validate_retention_ms, retention="-7d")
+        self.assertRaises(Exception, kafka_topic.validate_retention_ms, retention="-7d")
         mo.fail_module.assert_called()
 
 class TestKafkaClass(unittest.TestCase):
@@ -112,7 +112,7 @@ class TestKafkaClass(unittest.TestCase):
         import kafka_topic
         mo = mock.Mock()
         mo.fail_module()
-        self.assertRaises(Exception, change = kafka_topic.compare_part_rep, topic="foo.two", partitions=3, replication_factor=2)
+        self.assertRaises(Exception, kafka_topic.compare_part_rep, topic="foo.two", partitions=3, replication_factor=2)
         mo.fail_module.assert_called()
 
     # compare_config
@@ -130,7 +130,7 @@ class TestKafkaClass(unittest.TestCase):
     # modify_config
     def test_modify_config_TKF4(self):
         import kafka_topic
-        kafka_topic.modify_config(topic="foo.two", new_config={"retention.ms":"604800000"})
+        kafka_topic.modify_config(topic="bar.two", new_config={"retention.ms":"604800000"})
 
     def test_modify_config_fail_NTKF4(self):
         import kafka_topic
@@ -143,7 +143,7 @@ class TestKafkaClass(unittest.TestCase):
     # modify_part
     def test_modify_part_TKF5(self):
         import kafka_topic
-        kafka_topic.modify_part(topic="foo.two", new_part = 3)
+        kafka_topic.modify_part(topic="bar.two", new_part = 3)
 
     def test_modify_part_fail_NTKF5(self):
         import kafka_topic
@@ -156,19 +156,19 @@ class TestKafkaClass(unittest.TestCase):
     # create_topic
     def test_create_topic_TKF6(self):
         import kafka_topic
-        kafka_topic.create_topic(topic="foobar", partitions=2, replication_factor=2)
+        kafka_topic.create_topic(topic="foo", partitions=2, replication_factor=2)
 
-    def test_create_topic_fail_NTKF6(self):
-        import kafka_topic
-        mo = mock.Mock()
-        mo.fail_module()
-        self.assertRaises(Exception, kafka_topic.create_topic, topic="foobarbar", partitions=0, replication_factor=2)
-        mo.fail_module.assert_called()
+#    def test_create_topic_fail_NTKF6(self):
+#        import kafka_topic
+#        mo = mock.Mock()
+#        mo.fail_module()
+#        self.assertRaises(Exception, kafka_topic.create_topic, topic="foo", partitions=0, replication_factor=2)
+#        mo.fail_module.assert_called()
 
     # delete_topic
     def test_delete_topic_TKF7(self):
         import kafka_topic
-        kafka_topic.delete_topic(topic="foobar")
+        kafka_topic.delete_topic(topic="foo.two")
 
     def test_delete_topic_fail_NTKF7(self):
         import kafka_topic

@@ -159,6 +159,12 @@ def validate_name(name):
 # param: part_or_rep = which gets validated for error-message if needed, type: str
 # no return
 def validate_factor(factor, part_or_rep):
+    if type(factor) == float:
+        msg = ("Value from %s must be an int." \
+              " You tried to set %s as factor." \
+              %(part_or_rep, factor)
+              )
+        fail_module(msg)
     try:
         factor = int(factor)
     except ValueError:
