@@ -514,7 +514,7 @@ def main():
 
 
     if topic_exists and (module.params['state'] == "present"):
-        result['state'] == "present"
+        result['state'] = "present"
         mod_part = compare_part_rep(module.params['name'], module.params['partitions'], module.params['replication_factor'])
         if mod_part:
             modify_part(module.params['name'], module.params['partitions'])
