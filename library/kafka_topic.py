@@ -371,10 +371,9 @@ def modify_config(topic, new_config):
     for config, newvalue in new_config.items():       #iterate trough new-config-dict and set them on topic-resource
         resource[0].set_config(config,newvalue)
 
-    des = admin.alter_configs(resource)             #alter topic with new config
-    y = list(des.values())
-
     try:
+        des = admin.alter_configs(resource)             #alter topic with new config
+        y = list(des.values())
         conf = y[0].result()                        #use .result-func for finalizing
     except Exception:
         msg = ("Failed to finalize config-change for topic %s" \
@@ -389,11 +388,10 @@ def modify_config(topic, new_config):
 # return: no return
 def modify_part(topic, new_part):
     new_parts = [NewPartitions(topic, new_part)]
-    fs = admin.create_partitions(new_parts, validate_only=False)
-
-    y = list(fs.values())
 
     try:
+        fs = admin.create_partitions(new_parts, validate_only=False)
+        y = list(fs.values())
         conf = y[0].result()
     except Exception:
         msg = ("Failed to finalize partition-change for topic %s" \
@@ -409,11 +407,10 @@ def modify_part(topic, new_part):
 # return: no return
 def create_topic(topic, partitions, replication_factor):
     topic = [NewTopic(topic, num_partitions=partitions,  replication_factor=replication_factor)]
-    fs = admin.create_topics(topic)
-
-    y = list(fs.values())
 
     try:
+        fs = admin.create_topics(topic)
+        y = list(fs.values())
         new_topic = y[0].result()
     except Exception:
         msg = ("Failed to create topic %s." \
@@ -427,11 +424,10 @@ def create_topic(topic, partitions, replication_factor):
 # return: no return
 def delete_topic(topic):
     topic = [topic]
-    fs = admin.delete_topics(topic)
-
-    y = list(fs.values())
 
     try:
+        fs = admin.delete_topics(topic)
+        y = list(fs.values())
         deleted_topic = y[0].result()
     except Exception:
         msg = ("Failed to delete topic %s." \
