@@ -158,12 +158,12 @@ class TestKafkaClass(unittest.TestCase):
         import kafka_topic
         kafka_topic.create_topic(topic="foo", partitions=2, replication_factor=2)
 
-#    def test_create_topic_fail_NTKF6(self):
-#        import kafka_topic
-#        mo = mock.Mock()
-#        mo.fail_module()
-#        self.assertRaises(Exception, kafka_topic.create_topic, topic="foo", partitions=0, replication_factor=2)
-#        mo.fail_module.assert_called()
+    def test_create_topic_fail_NTKF6(self):
+        import kafka_topic
+        mo = mock.Mock()
+        mo.fail_module()
+        self.assertRaises(Exception, kafka_topic.create_topic, topic="foo:", partitions=1, replication_factor=2)
+        mo.fail_module.assert_called()
 
     # delete_topic
     def test_delete_topic_TKF7(self):

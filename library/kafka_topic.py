@@ -340,6 +340,9 @@ def compare_part_rep(topic, partitions, replication_factor):
 # param: new_config = dictionary with new config and values, type: dict
 # return: True if change is needed, False if no change is needed, type: bool
 def compare_config(topic, new_config):
+    if not bool(new_config):
+        return True
+
     resource = [ConfigResource("TOPIC", topic)]
     des = admin.describe_configs(resource)
 
