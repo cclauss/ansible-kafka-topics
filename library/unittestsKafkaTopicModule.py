@@ -184,7 +184,7 @@ class TestKafkaClass(unittest.TestCase):
 
 class TestAnsibleClass(unittest.TestCase):
     # fail_module
-    def test_fail_module_TAK1(self):
+    def test_fail_module_TAF1(self):
         import kafka_topic
         self.assertRaises(Exception, kafka_topic.fail_module, msg="Test is successfull")
 
