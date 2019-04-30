@@ -130,8 +130,6 @@ from confluent_kafka.admin import AdminClient, NewTopic, NewPartitions, ConfigRe
 import re
 import socket
 
-import pdb
-
 ##########################################
 #                                        #
 #       INPUT-VALIDATION-FUNCTIONS       #
@@ -482,6 +480,7 @@ def main():
     global result
     global admin
 
+    # initialize object AnsibleModule
     module_args = dict(
         name = dict(type='str', required=True),
         state = dict(type='str', required=True, choices=['absent','present']),
@@ -502,7 +501,10 @@ def main():
         argument_spec=module_args,
     )
 
+    # set topicname as result as soon as possible, for meaningful error-messages
     result['name'] = module.params['name']
+
+    # validate all parameter
     validate_name(module.params['name'])
 
     validate_factor(module.params['partitions'], "partitions")
@@ -513,14 +515,16 @@ def main():
         retention_ms = validate_retention_ms(module.params['retention'])
         module.params['retention'] = retention_ms
 
+    # after validation, initialize object AdminClient for configuring topics on kafka-broker
     admin_conf = {}
     admin_conf['bootstrap_server'] = final_broker_definition
 
     admin = AdminClient({'bootstrap.servers':final_broker_definition})
 
+    # check if topic exists and act according to return-value
     topic_exists = check_topic(module.params['name'])
 
-
+    # if topic exists and should stay so, compare configuration and modify them if needed
     if topic_exists and (module.params['state'] == "present"):
         result['state'] = "present"
         mod_part = compare_part_rep(module.params['name'], module.params['partitions'], module.params['replication_factor'])
@@ -533,13 +537,13 @@ def main():
             modify_config(module.params['name'], new_conf)
             result['changed'] = True
 
-
+    # if topic exists and should not, delete it
     if topic_exists and (module.params['state'] == "absent"):
         delete_topic(module.params['name'])
         result['changed'] = True
         result['state'] = "absent"
 
-
+    # if topic does not exist, but should, create and configure
     if not topic_exists and (module.params['state'] == "present"):
         create_topic(module.params['name'], module.params['partitions'], module.params['replication_factor'])
         result['changed'] = True
@@ -550,10 +554,11 @@ def main():
             topic_exists = check_topic(module.params['name'])
         modify_config(module.params['name'], new_conf)
 
-
+    # if topic doest not exists and should stay that way, do nothing
     if not topic_exists and (module.params['state'] == "absent"):
         result['state'] = "absent"
 
+    # exist module and print result-dictionary
     module.exit_json(**result)
 
 if __name__ == '__main__':
