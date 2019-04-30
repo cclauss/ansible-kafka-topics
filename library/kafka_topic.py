@@ -130,6 +130,8 @@ from confluent_kafka.admin import AdminClient, NewTopic, NewPartitions, ConfigRe
 import re
 import socket
 
+import pdb
+
 ##########################################
 #                                        #
 #       INPUT-VALIDATION-FUNCTIONS       #
@@ -340,18 +342,25 @@ def compare_part_rep(topic, partitions, replication_factor):
 # param: new_config = dictionary with new config and values, type: dict
 # return: True if change is needed, False if no change is needed, type: bool
 def compare_config(topic, new_config):
-    if not bool(new_config):
-        return True
-
     resource = [ConfigResource("TOPIC", topic)]
     des = admin.describe_configs(resource)
 
     y = list(des.values())
     old_conf = y[0].result()
 
-    for config, newvalue in new_config.items():       #iterate trough new-config-dict and compare with old-config-dict, using config as key
-        if newvalue != old_conf[config].value:
-            return True
+    if not bool(new_config):
+        default_configs = {
+            "cleanup.policy":"delete",
+            "retention.ms":"604800000"
+        }
+        for conf, defaultvalue in default_configs.items():
+            if defaultvalue != old_conf[conf].value:
+                return True
+
+    else:
+        for config, newvalue in new_config.items():       #iterate trough new-config-dict and compare with old-config-dict, using config as key
+            if str(newvalue) != old_conf[config].value:
+                return True
 
     return False
 
