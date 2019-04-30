@@ -1,0 +1,14 @@
+- name: testing
+  connection: local
+  hosts: localhost
+  vars:
+    ansible_python_interpreter: /home/kochjo/IPA/.venv/bin/python3
+  tasks:
+    - name: create topic
+      kafka_topic:
+        name: "bar"
+        state: present
+        partitions: 2
+        replication_factor: 1
+        bootstrap_server:
+          - 127.0.0.1:9092
