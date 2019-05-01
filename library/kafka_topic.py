@@ -237,7 +237,7 @@ def validate_port(port):
               %(port)
               )
         fail_module(msg)
-    if (port <= 0) or (port > 65535):
+    if (port <= 1024) or (port > 65535):
         msg = ("Valid Port-Range is: 1-65535." \
               " But given Port is: %s" \
               %(port)
