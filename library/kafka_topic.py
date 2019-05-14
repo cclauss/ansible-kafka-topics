@@ -524,7 +524,7 @@ def main():
     # check if topic exists and act according to return-value
     topic_exists = check_topic(module.params['name'])
 
-    # if topic exists and should stay so, compare configuration and modify them if needed
+    # if topic exists and should stay so, compare configuration and modify it if needed
     if topic_exists and (module.params['state'] == "present"):
         result['state'] = "present"
         mod_part = compare_part_rep(module.params['name'], module.params['partitions'], module.params['replication_factor'])
