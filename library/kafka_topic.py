@@ -131,165 +131,7 @@ import re
 import socket
 import time
 
-##########################################
-#                                        #
-#       INPUT-VALIDATION-FUNCTIONS       #
-#                                        #
-##########################################
-
-# validate name for topic
-# param: name = topicname, type: str
-# no return
-def validate_name(name):
-    max_length = 249
-    #regex for checking if topicname matches topic-name-grammar set from the ISVC-Project
-    rema = re.match(r"^([a-z][a-z\d-]+(\.[a-z][a-z\d-]+)*|app\.[a-z]{2,})(\.[A-Z][A-Za-z\d]+(\.v[1-9][0-9]*)?)?(-(state|command|event)(\.state|\.command|\.event)*)?(-[a-z][a-z0-9]*)?(-from\.(test|int|prod))?$", name)
-    if rema:
-        rema = rema.group(0)
-    if not rema or len(rema) > max_length:
-        msg = ("Invalid name for topic." \
-              " Valid characters are: a-z, A-Z, 0-9, \".\",\"-\",\"_\"" \
-              " and a max-length of %s characters." \
-              " Also check out the Topic-Grammar from the ISVC-Project." \
-              %(max_length)
-              )
-        fail_module(msg)
-
-# validate partition-number and replication-number
-# param: factor = number for partitions or replication, type:int
-# param: part_or_rep = which gets validated for error-message if needed, type: str
-# no return
-def validate_factor(factor, part_or_rep):
-    if type(factor) == float:
-        msg = ("Value from %s must be an int." \
-              " You tried to set %s as factor." \
-              %(part_or_rep, factor)
-              )
-        fail_module(msg)
-    try:
-        factor = int(factor)
-    except ValueError:
-        msg = ("Value from %s must be an int." \
-              " You tried to set %s as factor." \
-              %(part_or_rep, factor)
-              )
-        fail_module(msg)
-        if factor <= 0:
-            msg = ("Value from %s must be a positive int." \
-                  " You tried to set %s as factor." \
-                  %(part_or_rep, factor)
-                  )
-            fail_module(msg)
-
-# validate broker-definition
-# param: broker_definition, type:list, pattern per broker: 'host:port'
-# returns brokers as a string with following pattern: 'host:port,host:port'
-def validate_broker(broker_definition):
-    broker_def_list = []
-    for broker in broker_definition:
-        broker_parts = broker.split(":")
-        if len(broker_parts) == 2:
-            broker = validate_ipv4(broker_parts)
-        if len(broker_parts) > 2:
-            msg = ("It seems you tried so set an IPv6-Address: %s" \
-                  " We do not support that so far - please set" \
-                  " an IPv4-Address." \
-                  %(broker)
-                  )
-            fail_module(msg)
-        if len(broker_parts) < 2:
-            msg = ("Broker-Definition does not seem to be valid: %s" \
-                  " Use following pattern per broker: host:port." \
-                  %(broker)
-                  )
-            fail_module(msg)
-        broker_def_list.append(broker)
-    final_broker_definition = ",".join(broker_def_list)
-    module.params['bootstrap_server'] = final_broker_definition
-
-# validate ipv4-address, trying to build a tcp-connection to given address
-# param: broker = one broker-definition, type: list, pattern: [host,port]
-# return: broker, type: str, pattern: 'host:port'
-def validate_ipv4(broker):
-    port = validate_port(broker[1])
-    ip = broker[0]
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    try:
-        #try to make a connection
-        sock.connect((ip,port))
-        sock.close()
-    except socket.error:
-        sock.close()
-        msg = ("Can not connect to broker: %s" \
-              " Please check if the definition is right." \
-              %(broker)
-              )
-        fail_module(msg)
-    return str(ip)+":"+str(port)
-
-# validate port
-# param: port, type: str
-# return: port, type: int
-def validate_port(port):
-    try:
-        port = int(port)
-    except ValueError:
-        msg = ("Port needs to be int, but got: %s" \
-              %(port)
-              )
-        fail_module(msg)
-    if (port <= 1024) or (port > 65535):
-        msg = ("Valid Port-Range is: 1-65535." \
-              " But given Port is: %s" \
-              %(port)
-              )
-        fail_module(msg)
-    return port
-
-# validate retention time and convert to ms
-# param: retention_time = retention-time, type: str, pattern: %d%h%m%s%ms
-# return: retention-time in ms unless set to unlimited, type: int or string
-def validate_retention_ms(retention_time):
-    if retention_time == "-1":     #sets retention-time to unlimited
-        return retention_time
-
-    #try to parse retention_time with regex into groups, split by timetype
-    rema = re.match( r"(?P<days>\d+d)?(?P<hours>\d+h)?(?P<minutes>\d+m)?(?P<seconds>\d+s)?(?P<miliseconds>\d+m)?",retention_time)
-
-    t = rema.span()
-    if t[1] == 0:
-        msg = ("Could not parse given retention-time: %s into ms." \
-              " Please use the following pattern: %%d%%h%%m%%s%%ms." \
-              %(retention_time)
-              )
-        fail_module(msg)
-
-    days = rema.group("days")
-    hours = rema.group("hours")
-    minutes = rema.group("minutes")
-    seconds = rema.group("seconds")
-    miliseconds = rema.group("miliseconds")
-
-    timetype = [days, hours, minutes, seconds, miliseconds]
-    multiplier = [86400000,3600000,60000,1000,1]
-    ms_total = 0
-    i = 0
-
-    for t_type in timetype:     #convert to ms and add together
-        if t_type is not None:
-            ms_total = ms_total + (int(t_type[:-1])*multiplier[i])     #[:-1] cuts of last char (which indicates timetype and is not an int)
-        i = i+1
-
-    if (ms_total >= 2**63):
-        msg = ("Your chosen retention-time is way too long." \
-              " Retention-time can not be over 2^63ms." \
-              " You set %s as retention, which results in %s ms." \
-              %(retention_time, ms_total)
-              )
-        fail_module(msg)
-
-    module.params['retention_time'] =  ms_total
-
+import pdb
 
 ##########################################
 #                                        #
@@ -462,12 +304,174 @@ def add_config_together(module):
 
 ##########################################
 #                                        #
+#       INPUT-VALIDATION-FUNCTIONS       #
+#                                        #
+##########################################
+
+# validate name for topic
+# param: name = topicname, type: str
+# no return
+def validate_name(name):
+    max_length = 249
+    #regex for checking if topicname matches topic-name-grammar set from the ISVC-Project
+    rema = re.match(r"^([a-z][a-z\d-]+(\.[a-z][a-z\d-]+)*|app\.[a-z]{2,})(\.[A-Z][A-Za-z\d]+(\.v[1-9][0-9]*)?)?(-(state|command|event)(\.state|\.command|\.event)*)?(-[a-z][a-z0-9]*)?(-from\.(test|int|prod))?$", name)
+    if rema:
+        rema = rema.group(0)
+    if not rema or len(rema) > max_length:
+        msg = ("Invalid name for topic." \
+              " Valid characters are: a-z, A-Z, 0-9, \".\",\"-\",\"_\"" \
+              " and a max-length of %s characters." \
+              " Also check out the Topic-Grammar from the ISVC-Project." \
+              %(max_length)
+              )
+        fail_module(msg)
+
+# validate partition-number and replication-number
+# param: factor = number for partitions or replication, type:int
+# param: part_or_rep = which gets validated for error-message if needed, type: str
+# no return
+def validate_factor(factor):
+    if factor <= 0 or type(factor) != int:
+        msg = ("Value must be a positive int." \
+              " You tried to set %s as factor." \
+              %(factor)
+              )
+        fail_module(msg)
+
+# validate broker-definition
+# param: broker_definition, type:list, pattern per broker: 'host:port'
+# returns brokers as a string with following pattern: 'host:port,host:port'
+def validate_broker(broker_definition):
+    broker_def_list = []
+    for broker in broker_definition:
+        broker_parts = broker.split(":")
+        if len(broker_parts) == 2:
+            broker = validate_ipv4(broker_parts)
+        if len(broker_parts) > 2:
+            msg = ("It seems you tried so set an IPv6-Address: %s" \
+                  " We do not support that so far - please set" \
+                  " an IPv4-Address." \
+                  %(broker)
+                  )
+            fail_module(msg)
+        if len(broker_parts) < 2:
+            msg = ("Broker-Definition does not seem to be valid: %s" \
+                  " Use following pattern per broker: host:port." \
+                  %(broker)
+                  )
+            fail_module(msg)
+        broker_def_list.append(broker)
+    final_broker_definition = ",".join(broker_def_list)
+    module.params['bootstrap_server'] = final_broker_definition
+
+# validate ipv4-address, trying to build a tcp-connection to given address
+# param: broker = one broker-definition, type: list, pattern: [host,port]
+# return: broker, type: str, pattern: 'host:port'
+def validate_ipv4(broker):
+    port = validate_port(broker[1])
+    ip = broker[0]
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        #try to make a connection
+        sock.connect((ip,port))
+        sock.close()
+    except socket.error:
+        sock.close()
+        msg = ("Can not connect to broker: %s" \
+              " Please check if the definition is right." \
+              %(broker)
+              )
+        fail_module(msg)
+    return str(ip)+":"+str(port)
+
+# validate port
+# param: port, type: str
+# return: port, type: int
+def validate_port(port):
+    try:
+        port = int(port)
+    except ValueError:
+        msg = ("Port needs to be int, but got: %s" \
+              %(port)
+              )
+        fail_module(msg)
+    if (port <= 1024) or (port > 65535):
+        msg = ("Valid Port-Range is: 1-65535." \
+              " But given Port is: %s" \
+              %(port)
+              )
+        fail_module(msg)
+    return port
+
+# validate retention time and convert to ms
+# param: retention_time = retention-time, type: str, pattern: %d%h%m%s%ms
+# return: retention-time in ms unless set to unlimited, type: int or string
+def validate_retention_ms(retention_time):
+    if retention_time == "-1":     #sets retention-time to unlimited
+        return retention_time
+
+    #try to parse retention_time with regex into groups, split by timetype
+    rema = re.match( r"(?P<days>\d+d)?(?P<hours>\d+h)?(?P<minutes>\d+m)?(?P<seconds>\d+s)?(?P<miliseconds>\d+m)?",retention_time)
+
+    t = rema.span()
+    if t[1] == 0:
+        msg = ("Could not parse given retention-time: %s into ms." \
+              " Please use the following pattern: %%d%%h%%m%%s%%ms." \
+              %(retention_time)
+              )
+        fail_module(msg)
+
+    days = rema.group("days")
+    hours = rema.group("hours")
+    minutes = rema.group("minutes")
+    seconds = rema.group("seconds")
+    miliseconds = rema.group("miliseconds")
+
+    timetype = [days, hours, minutes, seconds, miliseconds]
+    multiplier = [86400000,3600000,60000,1000,1]
+    ms_total = 0
+    i = 0
+
+    for t_type in timetype:     #convert to ms and add together
+        if t_type is not None:
+            ms_total = ms_total + (int(t_type[:-1])*multiplier[i])     #[:-1] cuts of last char (which indicates timetype and is not an int)
+        i = i+1
+
+    if (ms_total >= 2**63):
+        msg = ("Your chosen retention-time is way too long." \
+              " Retention-time can not be over 2^63ms." \
+              " You set %s as retention, which results in %s ms." \
+              %(retention_time, ms_total)
+              )
+        fail_module(msg)
+
+    module.params['retention_time'] =  ms_total
+
+##########################################
+#                                        #
 #             ADMIN-CONFIG               #
 #                                        #
 ##########################################
 
-
-
+def validate_sasl_mechanism(sasl_mechanism):
+    if sasl_mechanism == "PLAIN":
+        if module.params['sasl_username'] == None \
+        or module.params['sasl_password'] == None \
+        or module.params['security_protocol'] == None:
+            msg = ("If you choose PLAIN as sasl_mechanism," \
+                  " you also need to set: sasl_username," \
+                  " sasl_password and security_protocol." \
+                  )
+            fail_module(msg)
+        admin_conf['sasl.mechanism'] = "PLAIN"
+        admin_conf['sasl.password'] = module.params['sasl_password']
+        admin_conf['sasl.username'] = module.params['sasl_username']
+        if module.params['security_protocol'] == "ssl":
+            admin_conf['security.protocol'] = "sasl_ssl"
+        else:
+            admin_conf['security.protocol'] = "sasl_plaintext"
+        if module.params['ca_location'] is not None:
+            admin_conf['ssl.ca.location'] = module.params['ca_location']
 
 ##########################################
 #                                        #
@@ -526,9 +530,11 @@ def main():
 
     # param-list for later iterating through it for validating.
     # Choice-Parameter are left out because Ansible validates them
+    # Child-Parameter like sasl_username are left out aswell because
+    # they get validated through their parent-param like sasl_mechanism
     params = ['name','partitions','replication_factor','bootstrap_server',\
               'retention_time',\
-              'sasl_password','sasl_username','ca_location']
+              'sasl_mechanism']
 
 
     #map validation-function to corresponding params
@@ -537,25 +543,23 @@ def main():
         partitions = validate_factor,
         replication_factor = validate_factor,
         bootstrap_server = validate_broker,
-        retention_time = validate_retention_ms
+        retention_time = validate_retention_ms,
+        sasl_mechanism = validate_sasl_mechanism
     )
 
     # validate all parameters
-    validate_name(module.params['name'])
+    for element in params:
+        if module.params[element] is not None:
+            params_valid_dict[element](module.params[element])
 
-    validate_factor(module.params['partitions'], "partitions")
-    validate_factor(module.params['replication_factor'], "replication-factor")
-    validate_broker(module.params['bootstrap_server'])
-
-    if module.params['retention_time'] is not None:
-        validate_retention_ms(module.params['retention_time'])
 
     #create admin_conf-dict for connection-params like authentication
-    admin_conf['bootstrap_server'] = module.params['bootstrap_server']
+    admin_conf['bootstrap.servers'] = module.params['bootstrap_server']
 
+    #pdb.set_trace()
 
     # after validation, initialize object AdminClient for configuring topics on kafka-broker
-    admin = AdminClient({'bootstrap.servers':final_broker_definition})
+    admin = AdminClient(admin_conf)
 
     # check if topic exists and act according to return-value
     topic_exists = check_topic(module.params['name'])
