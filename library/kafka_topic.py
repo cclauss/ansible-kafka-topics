@@ -466,8 +466,6 @@ def add_config_together(module):
 #                                        #
 ##########################################
 
-def check_sasl_plain():
-    if module.params['security_protocol'] !=
 
 
 
@@ -492,6 +490,7 @@ def main():
     global module
     global result
     global admin
+    global admin_conf
 
     # initialize object AnsibleModule
     module_args = dict(
@@ -519,8 +518,27 @@ def main():
         argument_spec=module_args,
     )
 
+    # admin-config dictionary for creating adminclient
+    admin_conf = {}
+
     # set topicname as result as soon as possible, for meaningful error-messages
     result['name'] = module.params['name']
+
+    # param-list for later iterating through it for validating.
+    # Choice-Parameter are left out because Ansible validates them
+    params = ['name','partitions','replication_factor','bootstrap_server',\
+              'retention_time',\
+              'sasl_password','sasl_username','ca_location']
+
+
+    #map validation-function to corresponding params
+    params_valid_dict = dict(
+        name = validate_name,
+        partitions = validate_factor,
+        replication_factor = validate_factor,
+        bootstrap_server = validate_broker,
+        retention_time = validate_retention_ms
+    )
 
     # validate all parameters
     validate_name(module.params['name'])
@@ -534,7 +552,6 @@ def main():
         module.params['retention_time'] = retention_ms
 
     #create admin_conf-dict for connection-params like authentication
-    admin_conf = {}
     admin_conf['bootstrap_server'] = final_broker_definition
     if module.params['sasl_mechanism'] is not None:
         if module.params['sasl_mechanism'] == "PLAIN":
