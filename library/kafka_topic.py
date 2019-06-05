@@ -205,7 +205,7 @@ def validate_broker(broker_definition):
             fail_module(msg)
         broker_def_list.append(broker)
     final_broker_definition = ",".join(broker_def_list)
-    return final_broker_definition
+    module.params['bootstrap_server'] = final_broker_definition
 
 # validate ipv4-address, trying to build a tcp-connection to given address
 # param: broker = one broker-definition, type: list, pattern: [host,port]
@@ -288,7 +288,7 @@ def validate_retention_ms(retention_time):
               )
         fail_module(msg)
 
-    return ms_total
+    module.params['retention_time'] =  ms_total
 
 
 ##########################################
@@ -545,18 +545,13 @@ def main():
 
     validate_factor(module.params['partitions'], "partitions")
     validate_factor(module.params['replication_factor'], "replication-factor")
-    final_broker_definition = validate_broker(module.params['bootstrap_server'])
+    validate_broker(module.params['bootstrap_server'])
 
     if module.params['retention_time'] is not None:
-        retention_ms = validate_retention_ms(module.params['retention_time'])
-        module.params['retention_time'] = retention_ms
+        validate_retention_ms(module.params['retention_time'])
 
     #create admin_conf-dict for connection-params like authentication
-    admin_conf['bootstrap_server'] = final_broker_definition
-    if module.params['sasl_mechanism'] is not None:
-        if module.params['sasl_mechanism'] == "PLAIN":
-            check_sasl_plain()
-
+    admin_conf['bootstrap_server'] = module.params['bootstrap_server']
 
 
     # after validation, initialize object AdminClient for configuring topics on kafka-broker
