@@ -68,7 +68,7 @@ options:
     default: delete
     type: str
     choices: [ delete, compact ]
-  retention:
+  retention_time:
     description:
       - Corresponds to the topic-config "retention.ms" from Apache Kafka.
       - How long a log will be retained before being discarded.
@@ -99,7 +99,7 @@ EXAMPLES = '''
     replication_factor: 2
     bootstrap_server:
       - 127.0.0.4:1234
-    retention: 2d12h
+    retention_time: 2d12h
 
 #delete topic
 - name: delete topic "bar"
@@ -247,20 +247,20 @@ def validate_port(port):
     return port
 
 # validate retention time and convert to ms
-# param: retention = retention-time, type: str, pattern: %d%h%m%s%ms
+# param: retention_time = retention-time, type: str, pattern: %d%h%m%s%ms
 # return: retention-time in ms unless set to unlimited, type: int or string
-def validate_retention_ms(retention):
-    if retention == "-1":     #sets retention-time to unlimited
-        return retention
+def validate_retention_ms(retention_time):
+    if retention_time == "-1":     #sets retention-time to unlimited
+        return retention_time
 
-    #try to parse retention with regex into groups, split by timetype
-    rema = re.match( r"(?P<days>\d+d)?(?P<hours>\d+h)?(?P<minutes>\d+m)?(?P<seconds>\d+s)?(?P<miliseconds>\d+m)?",retention)
+    #try to parse retention_time with regex into groups, split by timetype
+    rema = re.match( r"(?P<days>\d+d)?(?P<hours>\d+h)?(?P<minutes>\d+m)?(?P<seconds>\d+s)?(?P<miliseconds>\d+m)?",retention_time)
 
     t = rema.span()
     if t[1] == 0:
         msg = ("Could not parse given retention-time: %s into ms." \
               " Please use the following pattern: %%d%%h%%m%%s%%ms." \
-              %(retention)
+              %(retention_time)
               )
         fail_module(msg)
 
@@ -284,7 +284,7 @@ def validate_retention_ms(retention):
         msg = ("Your chosen retention-time is way too long." \
               " Retention-time can not be over 2^63ms." \
               " You set %s as retention, which results in %s ms." \
-              %(retention, ms_total)
+              %(retention_time, ms_total)
               )
         fail_module(msg)
 
@@ -451,13 +451,24 @@ def delete_topic(topic):
 def add_config_together(module):
     configs = {
         "cleanup.policy":module.params["cleanup_policy"],
-        "retention.ms":module.params["retention"]
+        "retention.ms":module.params["retention_time"]
     }
     new_conf = {}
     for conf, value in configs.items():
         if configs[conf] is not None:
             new_conf[conf] = value
     return new_conf
+
+
+##########################################
+#                                        #
+#             ADMIN-CONFIG               #
+#                                        #
+##########################################
+
+def check_sasl_plain():
+    if module.params['security_protocol'] !=
+
 
 
 ##########################################
@@ -490,7 +501,12 @@ def main():
         replication_factor = dict(type='int', required=True),
         bootstrap_server = dict(type='list', required=True),
         cleanup_policy = dict(type='str', choices=['compact','delete']),
-        retention = dict(type='str')
+        retention_time = dict(type='str'),
+        sasl_mechanism = dict(type='str', choices=['GSSAPI','PLAIN','SCRAM-SHA-256','SCRAM-SHA-512','OAUTHBEARER']),
+        sasl_password = dict(type='str'),
+        sasl_username = dict(type='str'),
+        security_protocol = dict(type='str', choices=['plaintext','ssl']),
+        ca_location = dict(type='str')
     )
 
     result = dict(
@@ -506,21 +522,27 @@ def main():
     # set topicname as result as soon as possible, for meaningful error-messages
     result['name'] = module.params['name']
 
-    # validate all parameter
+    # validate all parameters
     validate_name(module.params['name'])
 
     validate_factor(module.params['partitions'], "partitions")
     validate_factor(module.params['replication_factor'], "replication-factor")
     final_broker_definition = validate_broker(module.params['bootstrap_server'])
 
-    if module.params['retention'] is not None:
-        retention_ms = validate_retention_ms(module.params['retention'])
-        module.params['retention'] = retention_ms
+    if module.params['retention_time'] is not None:
+        retention_ms = validate_retention_ms(module.params['retention_time'])
+        module.params['retention_time'] = retention_ms
 
-    # after validation, initialize object AdminClient for configuring topics on kafka-broker
+    #create admin_conf-dict for connection-params like authentication
     admin_conf = {}
     admin_conf['bootstrap_server'] = final_broker_definition
+    if module.params['sasl_mechanism'] is not None:
+        if module.params['sasl_mechanism'] == "PLAIN":
+            check_sasl_plain()
 
+
+
+    # after validation, initialize object AdminClient for configuring topics on kafka-broker
     admin = AdminClient({'bootstrap.servers':final_broker_definition})
 
     # check if topic exists and act according to return-value
