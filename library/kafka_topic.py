@@ -222,6 +222,7 @@ def modify_config(topic, new_config):
         resource[0].set_config(config,newvalue)
 
     try:
+        pdb.set_trace()
         des = admin.alter_configs(resource)             #alter topic with new config
         y = list(des.values())
         conf = y[0].result()                        #use .result-func for finalizing
@@ -287,20 +288,6 @@ def delete_topic(topic):
         fail_module(msg)
 
 
-# add different configs together in one dictionary for passing to compare-config and modify-config
-# param: module = AnsibleModule, containing the possible configs
-# return: new_config = dictionary containing all set configs, type: dict
-def add_config_together(module):
-    configs = {
-        "cleanup.policy":module.params["cleanup_policy"],
-        "retention.ms":module.params["retention_time"]
-    }
-    new_conf = {}
-    for conf, value in configs.items():
-        if configs[conf] is not None:
-            new_conf[conf] = value
-    return new_conf
-
 
 ##########################################
 #                                        #
@@ -338,9 +325,82 @@ def validate_factor(factor):
               )
         fail_module(msg)
 
+##########################################
+#                                        #
+#         TOPIC-CONFIG-VALIDATION        #
+#                                        #
+##########################################
+
+# add different configs together in one dictionary for passing to compare-config and modify-config
+# param: module = AnsibleModule, containing the possible configs
+# return: new_config = dictionary containing all set configs, type: dict
+def add_config_together(module):
+    configs = {
+        "cleanup.policy":module.params["cleanup_policy"],
+        "retention.ms":module.params["retention_time"],
+        "compression.type":module.params["compression_type"]
+    }
+    new_conf = {}
+    for conf, value in configs.items():
+        if configs[conf] is not None:
+            new_conf[conf] = value
+    return new_conf
+
+# validate retention time and convert to ms
+# param: retention_time = retention-time, type: str, pattern: %d%h%m%s%ms
+# return: retention-time in ms unless set to unlimited, type: int or string
+def validate_retention_ms(retention_time):
+    if retention_time == "-1":     #sets retention-time to unlimited
+        return retention_time
+
+    #try to parse retention_time with regex into groups, split by timetype
+    rema = re.match( r"(?P<days>\d+d)?(?P<hours>\d+h)?(?P<minutes>\d+m)?(?P<seconds>\d+s)?(?P<miliseconds>\d+m)?",retention_time)
+
+    t = rema.span()
+    if t[1] == 0:
+        msg = ("Could not parse given retention-time: %s into ms." \
+              " Please use the following pattern: %%d%%h%%m%%s%%ms." \
+              %(retention_time)
+              )
+        fail_module(msg)
+
+    days = rema.group("days")
+    hours = rema.group("hours")
+    minutes = rema.group("minutes")
+    seconds = rema.group("seconds")
+    miliseconds = rema.group("miliseconds")
+
+    timetype = [days, hours, minutes, seconds, miliseconds]
+    multiplier = [86400000,3600000,60000,1000,1]
+    ms_total = 0
+    i = 0
+
+    for t_type in timetype:     #convert to ms and add together
+        if t_type is not None:
+            ms_total = ms_total + (int(t_type[:-1])*multiplier[i])     #[:-1] cuts of last char (which indicates timetype and is not an int)
+        i = i+1
+
+    if (ms_total >= 2**63):
+        msg = ("Your chosen retention-time is way too long." \
+              " Retention-time can not be over 2^63ms." \
+              " You set %s as retention, which results in %s ms." \
+              %(retention_time, ms_total)
+              )
+        fail_module(msg)
+
+    module.params['retention_time'] =  ms_total
+
+
+
+##########################################
+#                                        #
+#         ADMIN-CONFIG-VALIDATION        #
+#                                        #
+##########################################
+
 # validate broker-definition
 # param: broker_definition, type:list, pattern per broker: 'host:port'
-# returns brokers as a string with following pattern: 'host:port,host:port'
+# sets broker-list as a string for admin-conf: 'host:port,host:port'
 def validate_broker(broker_definition):
     broker_def_list = []
     for broker in broker_definition:
@@ -403,75 +463,49 @@ def validate_port(port):
         fail_module(msg)
     return port
 
-# validate retention time and convert to ms
-# param: retention_time = retention-time, type: str, pattern: %d%h%m%s%ms
-# return: retention-time in ms unless set to unlimited, type: int or string
-def validate_retention_ms(retention_time):
-    if retention_time == "-1":     #sets retention-time to unlimited
-        return retention_time
-
-    #try to parse retention_time with regex into groups, split by timetype
-    rema = re.match( r"(?P<days>\d+d)?(?P<hours>\d+h)?(?P<minutes>\d+m)?(?P<seconds>\d+s)?(?P<miliseconds>\d+m)?",retention_time)
-
-    t = rema.span()
-    if t[1] == 0:
-        msg = ("Could not parse given retention-time: %s into ms." \
-              " Please use the following pattern: %%d%%h%%m%%s%%ms." \
-              %(retention_time)
-              )
-        fail_module(msg)
-
-    days = rema.group("days")
-    hours = rema.group("hours")
-    minutes = rema.group("minutes")
-    seconds = rema.group("seconds")
-    miliseconds = rema.group("miliseconds")
-
-    timetype = [days, hours, minutes, seconds, miliseconds]
-    multiplier = [86400000,3600000,60000,1000,1]
-    ms_total = 0
-    i = 0
-
-    for t_type in timetype:     #convert to ms and add together
-        if t_type is not None:
-            ms_total = ms_total + (int(t_type[:-1])*multiplier[i])     #[:-1] cuts of last char (which indicates timetype and is not an int)
-        i = i+1
-
-    if (ms_total >= 2**63):
-        msg = ("Your chosen retention-time is way too long." \
-              " Retention-time can not be over 2^63ms." \
-              " You set %s as retention, which results in %s ms." \
-              %(retention_time, ms_total)
-              )
-        fail_module(msg)
-
-    module.params['retention_time'] =  ms_total
-
-##########################################
-#                                        #
-#             ADMIN-CONFIG               #
-#                                        #
-##########################################
-
+# validate sasl-mechanism
+# param: sasl_mechanism = user-defined param
 def validate_sasl_mechanism(sasl_mechanism):
     if sasl_mechanism == "PLAIN":
-        if module.params['sasl_username'] == None \
-        or module.params['sasl_password'] == None \
-        or module.params['security_protocol'] == None:
-            msg = ("If you choose PLAIN as sasl_mechanism," \
-                  " you also need to set: sasl_username," \
-                  " sasl_password and security_protocol." \
-                  )
-            fail_module(msg)
-        admin_conf['sasl.mechanism'] = "PLAIN"
-        admin_conf['sasl.password'] = module.params['sasl_password']
-        admin_conf['sasl.username'] = module.params['sasl_username']
-        if module.params['security_protocol'] == "ssl":
-            admin_conf['security.protocol'] = "sasl_ssl"
-        else:
-            admin_conf['security.protocol'] = "sasl_plaintext"
-        if module.params['ca_location'] is not None:
-            admin_conf['ssl.ca.location'] = module.params['ca_location']
+        validate_sasl_PLAIN()
+    if sasl_mechanism == "GSSAPI":
+        fail_module("GSSAPI not supported so far")
+    if sasl_mechanism == "SCRAM-SHA-256":
+        fail_module("SCRAM-SHA-256 not supported so far")
+    if sasl_mechanism == "SCRAM-SHA-512":
+        fail_module("SCRAM-SHA-512 not supported so far")
+    if sasl_mechanism == "OAUTHBEARER":
+        fail_module("OAUTHBEARER not supported so far")
+    else:
+        msg = ("Supported SASL-Mechanisms are: PLAIN,"\
+              " GSSAPI, SCRAM-SHA-256, SCRAM-SHA-512,"\
+              " and OAUTHBEARER."\
+              )
+        fail_module(msg)
+
+# validate sasl-mechanism PLAIN, check if username, password and protocol is set
+# also check if ca-location is set
+# set each value in admin_conf
+def validate_sasl_PLAIN():
+    if module.params['sasl_username'] == None \
+    or module.params['sasl_password'] == None \
+    or module.params['security_protocol'] == None:
+        msg = ("If you choose PLAIN as sasl_mechanism," \
+              " you also need to set: sasl_username," \
+              " sasl_password and security_protocol." \
+              )
+        fail_module(msg)
+    admin_conf['sasl.mechanism'] = "PLAIN"
+    admin_conf['sasl.password'] = module.params['sasl_password']
+    admin_conf['sasl.username'] = module.params['sasl_username']
+    if module.params['security_protocol'] == "ssl":
+        admin_conf['security.protocol'] = "sasl_ssl"
+    else:
+        admin_conf['security.protocol'] = "sasl_plaintext"
+    if module.params['ca_location'] is not None:
+        admin_conf['ssl.ca.location'] = module.params['ca_location']
+
+
 
 ##########################################
 #                                        #
@@ -504,6 +538,7 @@ def main():
         replication_factor = dict(type='int', required=True),
         bootstrap_server = dict(type='list', required=True),
         cleanup_policy = dict(type='str', choices=['compact','delete']),
+        compression_type = dict(type='str', choices=['uncompressed','zstd','lz4','snappy','gzip','producer']),
         retention_time = dict(type='str'),
         sasl_mechanism = dict(type='str', choices=['GSSAPI','PLAIN','SCRAM-SHA-256','SCRAM-SHA-512','OAUTHBEARER']),
         sasl_password = dict(type='str'),
