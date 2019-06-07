@@ -1,2 +1,4 @@
 __pycache__/
-.vaul_pw.txt
+.vault_pw.txt
+*.retry
+testskripts

@@ -192,7 +192,8 @@ def compare_config(topic, new_config):
     if not bool(new_config):
         default_configs = {
             "cleanup.policy":"delete",
-            "retention.ms":"604800000"
+            "retention.ms":"604800000",
+            "compression_type":"producer"
         }
         for conf, defaultvalue in default_configs.items():
             if defaultvalue != old_conf[conf].value:
@@ -348,19 +349,22 @@ def add_config_together(module):
 
 # validate retention time and convert to ms
 # param: retention_time = retention-time, type: str, pattern: %d%h%m%s%ms
-# return: retention-time in ms unless set to unlimited, type: int or string
 def validate_retention_ms(retention_time):
     if retention_time == "-1":     #sets retention-time to unlimited
         return retention_time
+    convert_time_ms(retention_time,"retention_time")
 
+# convert user-given time to ms
+# param: time_ms = user-given time, config_type = for setting config and error-msg
+def convert_time_ms(time_ms,config_type):
     #try to parse retention_time with regex into groups, split by timetype
-    rema = re.match( r"(?P<days>\d+d)?(?P<hours>\d+h)?(?P<minutes>\d+m)?(?P<seconds>\d+s)?(?P<miliseconds>\d+m)?",retention_time)
+    rema = re.match( r"(?P<days>\d+d)?(?P<hours>\d+h)?(?P<minutes>\d+m)?(?P<seconds>\d+s)?(?P<miliseconds>\d+m)?",time_ms)
 
     t = rema.span()
     if t[1] == 0:
-        msg = ("Could not parse given retention-time: %s into ms." \
+        msg = ("Could not parse given %s: %s into ms." \
               " Please use the following pattern: %%d%%h%%m%%s%%ms." \
-              %(retention_time)
+              %(config_type,time_ms)
               )
         fail_module(msg)
 
@@ -381,14 +385,14 @@ def validate_retention_ms(retention_time):
         i = i+1
 
     if (ms_total >= 2**63):
-        msg = ("Your chosen retention-time is way too long." \
+        msg = ("Your chosen %s is way too long." \
               " Retention-time can not be over 2^63ms." \
               " You set %s as retention, which results in %s ms." \
-              %(retention_time, ms_total)
+              %(config_type,time_ms,ms_total)
               )
         fail_module(msg)
 
-    module.params['retention_time'] =  ms_total
+    module.params[config_type] =  ms_total
 
 
 
