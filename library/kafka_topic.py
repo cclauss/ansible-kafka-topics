@@ -223,7 +223,6 @@ def modify_config(topic, new_config):
         resource[0].set_config(config,newvalue)
 
     try:
-        pdb.set_trace()
         des = admin.alter_configs(resource)             #alter topic with new config
         y = list(des.values())
         conf = y[0].result()                        #use .result-func for finalizing
