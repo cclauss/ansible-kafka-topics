@@ -322,8 +322,30 @@ def compare_config(topic, new_config):
     if not bool(new_config):
         default_configs = {
             "cleanup.policy":"delete",
+            "compression.type":"producer",
+            "delete.retention.ms":"86400000",
+            "file.delete.delay.ms":"60000",
+            "flush.messages":"9223372036854775807",
+            "flush.ms":"9223372036854775807",
+            "follower.replication.throttled.replicas":"",
+            "index.interval.bytes":"4096",
+            "leader.replication.throttled.replicas":"",
+            "max.message.bytes":"1000012",
+            "message.format.version":"2.2-IV1",
+            "message.timestamp.difference.max.ms":"9223372036854775807",
+            "message.timestamp.type":"CreateTime",
+            "min.cleanable.dirty.ratio":"0.5",
+            "min.compaction.lag.ms":"0",
+            "min.insync.replicas":"1",
+            "preallocate":"false",
+            "retention.bytes":"-1",
             "retention.ms":"604800000",
-            "compression_type":"producer"
+            "segment.bytes":"1073741824",
+            "segment.index.bytes":"10485760",
+            "segment.jitter.ms":"0",
+            "segment.ms":"604800000",
+            "unclean.leader.election.enable":"false",
+            "message.downconversion.enable":"true"
         }
         for conf, defaultvalue in default_configs.items():
             if defaultvalue != old_conf[conf].value:
@@ -467,8 +489,30 @@ def validate_factor(factor):
 def add_config_together(module):
     configs = {
         "cleanup.policy":module.params["cleanup_policy"],
+        "compression.type":module.params["compression_type"],
+        "delete.retention.ms":module.params["delete_retention_ms"],
+        "file.delete.delay.ms":module.params["file_delete_delay_ms"],
+        "flush.messages":module.params["flush_messages"],
+        "flush.ms":module.params["flush_ms"],
+        "follower.replication.throttled.replicas":module.params["follower_replication_throttled_replicas"],
+        "index.interval.bytes":module.params["index_interval_bytes"],
+        "leader.replication.throttled.replicas":module.params["leader_replication_throttled_replicas"],
+        "max.message.bytes":module.params["max_message_bytes"],
+        "message.format.version":module.params["message_format_version"],
+        "message.timestamp.difference.max.ms":module.params["message_timestamp_difference_max_ms"],
+        "message.timestamp.type":module.params["message_timestamp_type"],
+        "min.cleanable.dirty.ratio":module.params["min_cleanable_dirty_ratio"],
+        "min.compaction.lag.ms":module.params["min_compaction_lag_ms"],
+        "min.insync.replicas":module.params["min_insync_replicas"],
+        "preallocate":module.params["preallocate"],
+        "retention.bytes":module.params["retention_bytes"],
         "retention.ms":module.params["retention_ms"],
-        "compression.type":module.params["compression_type"]
+        "segment.bytes":module.params["segment_bytes"],
+        "segment.index.bytes":module.params["segment_index_bytes"],
+        "segment.jitter.ms":module.params["segment_jitter_ms"],
+        "segment.ms":module.params["segment_ms"],
+        "unclean.leader.election.enable":module.params["unclean_leader_election_enable"],
+        "message.downconversion.enable":module.params["message_downconversion_enable"]
     }
     new_conf = {}
     for conf, value in configs.items():
