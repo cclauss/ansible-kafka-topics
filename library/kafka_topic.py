@@ -679,7 +679,7 @@ def main():
         index_interval_bytes = dict(type='int'),
         leader_replication_throttled_replicas = dict(type='list'),
         max_message_bytes = dict(type='int'),
-        message_format_version = dict(type='int', \
+        message_format_version = dict(type='str', \
             choices=['0.8.0', '0.8.1', '0.8.2', '0.9.0', \
                     '0.10.0-IV0', '0.10.0-IV1', '0.10.1-IV0', \
                     '0.10.1-IV1', '0.10.1-IV2', '0.10.2-IV0', \
@@ -728,7 +728,8 @@ def main():
     # Child-Parameter like sasl_username are left out aswell because
     # they get validated through their parent-param like sasl_mechanism
     params = ['name','partitions','replication_factor','bootstrap_server',\
-              'retention_ms',\
+              'delete_retention_ms','file_delete_delay_ms','message_timestamp_difference_max_ms',\
+              'min_compaction_lag_ms','retention_ms','segment_jitter_ms','segment_ms',\
               'sasl_mechanism']
 
 
@@ -738,7 +739,13 @@ def main():
         partitions = validate_factor,
         replication_factor = validate_factor,
         bootstrap_server = validate_broker,
+        delete_retention_ms = validate_delete_retention_ms,
+        file_delete_delay_ms = validate_file_delete_delay_ms,
+        message_timestamp_difference_max_ms = validate_message_timestamp_difference_max_ms,
+        min_compaction_lag_ms = validate_min_compaction_lag_ms,
         retention_ms = validate_retention_ms,
+        segment_jitter_ms = validate_segment_jitter_ms,
+        segment_ms = validate_segment_ms,
         sasl_mechanism = validate_sasl_mechanism
     )
 
