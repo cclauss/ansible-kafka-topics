@@ -58,6 +58,7 @@ options:
       - Use the following format: "host:port".
     required: true
     type: list
+
   cleanup_policy:
     description:
       - Corresponds to the topic-config "cleanup.policy" from Apache Kafka.
@@ -65,10 +66,106 @@ options:
         size limits have been reached.
       - If set to "compact", old segments will be compacted when their retention time
         or size limits have been reached.
-    default: delete
     type: str
     choices: [ delete, compact ]
-  retention_time:
+    default: delete
+  compression_type:
+    description
+      - Corresponds to the topic-config "compression.type" from Apache Kafka.
+    type: str
+    choices: [uncompressed, zstd, lz4, snappy, gzip, producer ]
+    default: producer
+  delete_retention_ms:
+    description:
+      - Corresponds to the topic-config "delete.retention.ms" from Apache Kafka.
+      - Use the following format: "%d%h%m%s%ms".
+    type: str
+    default: 86400000
+  file_delete_delay_ms:
+    description:
+      - Corresponds to the topic-config "file.delete.delay.ms" from Apache Kafka.
+      - Use the following format: "%d%h%m%s%ms".
+    type: str
+    default: 60000
+  flush_messages:
+    description:
+      - Corresponds to the topic-config "flush.messages" from Apache Kafka.
+    type: int
+    default: 9223372036854775807
+  flush_ms:
+    description:
+      - Corresponds to the topic-config "flush.ms" from Apache Kafka.
+      - Use the following format: "%d%h%m%s%ms".
+    type: str
+    default: 9223372036854775807
+  follower_replication_throttled_replicas:
+    description:
+      - Corresponds to the topic-config "follower.replication.throttled.replicas" from Apache Kafka.
+    type: list
+    default: ""
+  index_interval_bytes:
+    description:
+      - Corresponds to the topic-config "index.interval.bytes" from Apache Kafka.
+    type: int
+    default: 4096
+  leader_replication_throttled_replicas:
+    description:
+      - Corresponds to the topic-config "leader.replication.throttled.replicas" from Apache Kafka.
+    type: list
+    default: ""
+  max_message_bytes:
+    description:
+      - Corresponds to the topic-config "max.message.bytes" from Apache Kafka.
+    type: int
+    default: 1000012
+  message_format_version:
+    description:
+      - Corresponds to the topic-config "message.format.version" from Apache Kafka.
+    type: str
+    choices: [0.8.0, 0.8.1, 0.8.2, 0.9.0, 0.10.0-IV0, 0.10.0-IV1, 0.10.1-IV0, 0.10.1-IV1, 0.10.1-IV2, 0.10.2-IV0, 0.11.0-IV0, 0.11.0-IV1, 0.11.0-IV2, 1.0-IV0, 1.1-IV0, 2.0-IV0, 2.0-IV1, 2.1-IV0, 2.1-IV1, 2.1-IV2, 2.2-IV0, 2.2-IV1]
+    default: 2.2-IV1
+  message_timestamp_difference_max_ms:
+    description:
+      - Corresponds to the topic-config "message.timestamp.difference.max.ms" from Apache Kafka.
+      - Use the following format: "%d%h%m%s%ms".
+    type: str
+    default: 9223372036854775807
+  message_timestamp_type:
+    description:
+      - Corresponds to the topic-config "message.timestamp.type" from Apache Kafka.
+    type: str
+    choices: [CreateTime, LogAppendTime]
+    default: CreateTime
+  min_cleanable_dirty_ratio:
+    description:
+      - Corresponds to the topic-config "min.cleanable.dirty.ratio" from Apache Kafka.
+      - Range: 0-1
+    type: float
+    default: 0.5
+  min_compaction_lag_ms:
+    description:
+      - Corresponds to the topic-config "min.compaction.lag.ms" from Apache Kafka.
+      - Use the following format: "%d%h%m%s%ms".
+    type: int
+    default: 0
+  min_insync_replicas:
+    description:
+      - Corresponds to the topic-config "min.insync.replicas" from Apache Kafka.
+      - Must be greater than 0.
+    type: int
+    default: 1
+  preallocate:
+    description:
+      - Corresponds to the topic-config "preallocate" from Apache Kafka.
+    type: boolean
+    default: false
+  retention_bytes:
+    description:
+      - Corresponds to the topic-config "retention.bytes" from Apache Kafka.
+      - Setting it to "-1" means unlimited bytes-size.
+    type: int
+    default: -1
+  retention_ms:
     description:
       - Corresponds to the topic-config "retention.ms" from Apache Kafka.
       - How long a log will be retained before being discarded.
@@ -76,6 +173,39 @@ options:
       - Else use the following format: "%d%h%m%s%ms".
     default: 604800000ms (==7d)
     type: str
+  segment_bytes:
+    description:
+      - Corresponds to the topic-config "segment.bytes" from Apache Kafka.
+      - Must be greater than 13.
+    type: int
+    default: 1073741824
+  segment_index_bytes:
+    description:
+      - Corresponds to the topic-config "segment.index.bytes" from Apache Kafka.
+    type: int
+    default: 10485760
+  segment_jitter_ms:
+    description:
+      - Corresponds to the topic-config "segment.jitter.ms" from Apache Kafka.
+      - Use the following format: "%d%h%m%s%ms".
+    type: int
+    default: 0
+  segment_ms:
+    description:
+      - Corresponds to the topic-config "segment.ms" from Apache Kafka.
+      - Use the following format: "%d%h%m%s%ms".
+    type: int
+    default: 604800000
+  unclean_leader_election_enable:
+    description:
+      - Corresponds to the topic-config "unclean.leader.election.enable" from Apache Kafka.
+    type: boolean
+    default: false
+  message_downconversion_enable:
+    description:
+      - Corresponds to the topic-config "message.downconversion.enable" from Apache Kafka.
+    type: boolean
+    default: true
 '''
 EXAMPLES = '''
 ---
@@ -99,7 +229,7 @@ EXAMPLES = '''
     replication_factor: 2
     bootstrap_server:
       - 127.0.0.4:1234
-    retention_time: 2d12h
+    retention_ms: 2d12h
 
 #delete topic
 - name: delete topic "bar"
@@ -337,7 +467,7 @@ def validate_factor(factor):
 def add_config_together(module):
     configs = {
         "cleanup.policy":module.params["cleanup_policy"],
-        "retention.ms":module.params["retention_time"],
+        "retention.ms":module.params["retention_ms"],
         "compression.type":module.params["compression_type"]
     }
     new_conf = {}
@@ -347,16 +477,16 @@ def add_config_together(module):
     return new_conf
 
 # validate retention time and convert to ms
-# param: retention_time = retention-time, type: str, pattern: %d%h%m%s%ms
-def validate_retention_ms(retention_time):
-    if retention_time == "-1":     #sets retention-time to unlimited
-        return retention_time
-    convert_time_ms(retention_time,"retention_time")
+# param: retention_ms = retention-time, type: str, pattern: %d%h%m%s%ms
+def validate_retention_ms(retention_ms):
+    if retention_ms == "-1":     #sets retention-time to unlimited
+        return retention_ms
+    convert_time_ms(retention_ms,"retention_ms")
 
 # convert user-given time to ms
 # param: time_ms = user-given time, config_type = for setting config and error-msg
 def convert_time_ms(time_ms,config_type):
-    #try to parse retention_time with regex into groups, split by timetype
+    #try to parse retention_ms with regex into groups, split by timetype
     rema = re.match( r"(?P<days>\d+d)?(?P<hours>\d+h)?(?P<minutes>\d+m)?(?P<seconds>\d+s)?(?P<miliseconds>\d+m)?",time_ms)
 
     t = rema.span()
@@ -542,7 +672,7 @@ def main():
         bootstrap_server = dict(type='list', required=True),
         cleanup_policy = dict(type='str', choices=['compact','delete']),
         compression_type = dict(type='str', choices=['uncompressed','zstd','lz4','snappy','gzip','producer']),
-        retention_time = dict(type='str'),
+        retention_ms = dict(type='str'),
         sasl_mechanism = dict(type='str', choices=['GSSAPI','PLAIN','SCRAM-SHA-256','SCRAM-SHA-512','OAUTHBEARER']),
         sasl_password = dict(type='str'),
         sasl_username = dict(type='str'),
@@ -571,7 +701,7 @@ def main():
     # Child-Parameter like sasl_username are left out aswell because
     # they get validated through their parent-param like sasl_mechanism
     params = ['name','partitions','replication_factor','bootstrap_server',\
-              'retention_time',\
+              'retention_ms',\
               'sasl_mechanism']
 
 
@@ -581,7 +711,7 @@ def main():
         partitions = validate_factor,
         replication_factor = validate_factor,
         bootstrap_server = validate_broker,
-        retention_time = validate_retention_ms,
+        retention_ms = validate_retention_ms,
         sasl_mechanism = validate_sasl_mechanism
     )
 
