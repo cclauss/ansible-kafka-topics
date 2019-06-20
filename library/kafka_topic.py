@@ -672,7 +672,34 @@ def main():
         bootstrap_server = dict(type='list', required=True),
         cleanup_policy = dict(type='str', choices=['compact','delete']),
         compression_type = dict(type='str', choices=['uncompressed','zstd','lz4','snappy','gzip','producer']),
+        delete_retention_ms = dict(type='str'),
+        file_delete_delay_ms = dict(type='str'),
+        flush_messages = dict(type='int'),
+        follower_replication_throttled_replicas = dict(type='list'),
+        index_interval_bytes = dict(type='int'),
+        leader_replication_throttled_replicas = dict(type='list'),
+        max_message_bytes = dict(type='int'),
+        message_format_version = dict(type='int', \
+            choices=['0.8.0', '0.8.1', '0.8.2', '0.9.0', \
+                    '0.10.0-IV0', '0.10.0-IV1', '0.10.1-IV0', \
+                    '0.10.1-IV1', '0.10.1-IV2', '0.10.2-IV0', \
+                    '0.11.0-IV0', '0.11.0-IV1', '0.11.0-IV2', \
+                    '1.0-IV0', '1.1-IV0', '2.0-IV0', '2.0-IV1', \
+                    '2.1-IV0', '2.1-IV1', '2.1-IV2', '2.2-IV0', '2.2-IV1']),
+        message_timestamp_difference_max_ms = dict(type='str'),
+        message_timestamp_type = dict(type='str', choices=['CreateTime', 'LogAppendTime']),
+        min_cleanable_dirty_ratio = dict(type='float'),
+        min_compaction_lag_ms = dict(type='str'),
+        min_insync_replicas = dict(type='int'),
+        preallocate = dict(type='bool'),
+        retention_bytes = dict(type='int'),
         retention_ms = dict(type='str'),
+        segment_bytes = dict(type='int'),
+        segment_index_bytes = dict(type='int'),
+        segment_jitter_ms = dict(type='str'),
+        segment_ms = dict(type='str'),
+        unclean_leader_election_enable = dict(type='bool'),
+        message_downconversion_enable = dict(type='bool'),
         sasl_mechanism = dict(type='str', choices=['GSSAPI','PLAIN','SCRAM-SHA-256','SCRAM-SHA-512','OAUTHBEARER']),
         sasl_password = dict(type='str'),
         sasl_username = dict(type='str'),
