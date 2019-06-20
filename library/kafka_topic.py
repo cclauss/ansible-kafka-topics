@@ -476,12 +476,47 @@ def add_config_together(module):
             new_conf[conf] = value
     return new_conf
 
+# validate delete_retention_ms and convert to ms
+# type: str, pattern: %d%h%m%s%ms
+def validate_delete_retention_ms(delete_retention_ms):
+    convert_time_ms(delete_retention_ms,"delete_retention_ms")
+
+# validate file_delete_delay_ms and convert to ms
+# type: str, pattern: %d%h%m%s%ms
+def validate_file_delete_delay_ms(file_delete_delay_ms):
+    convert_time_ms(file_delete_delay_ms,"file_delete_delay_ms")
+
+# validate flush_ms and convert to ms
+# type: str, pattern: %d%h%m%s%ms
+def validate_flush_ms(flush_ms):
+    convert_time_ms(flush_ms,"flush_ms")
+
+# validate message_timestamp_difference_max_ms and convert to ms
+# type: str, pattern: %d%h%m%s%ms
+def validate_message_timestamp_difference_max_ms(message_timestamp_difference_max_ms):
+    convert_time_ms(message_timestamp_difference_max_ms,"message_timestamp_difference_max_ms")
+
+# validate min_compaction_lag_ms and convert to ms
+# type: str, pattern: %d%h%m%s%ms
+def validate_min_compaction_lag_ms(min_compaction_lag_ms):
+    convert_time_ms(min_compaction_lag_ms,"min_compaction_lag_ms")
+
 # validate retention time and convert to ms
 # param: retention_ms = retention-time, type: str, pattern: %d%h%m%s%ms
 def validate_retention_ms(retention_ms):
     if retention_ms == "-1":     #sets retention-time to unlimited
         return retention_ms
     convert_time_ms(retention_ms,"retention_ms")
+
+# validate segment_jitter_ms and convert to ms
+# type: str, pattern: %d%h%m%s%ms
+def validate_segment_jitter_ms(segment_jitter_ms):
+    convert_time_ms(segment_jitter_ms,"segment_jitter_ms")
+
+# validate segment_ms and convert to ms
+# type: str, pattern: %d%h%m%s%ms
+def validate_segment_ms(segment_ms):
+    convert_time_ms(segment_ms,"segment_ms")
 
 # convert user-given time to ms
 # param: time_ms = user-given time, config_type = for setting config and error-msg
@@ -675,6 +710,7 @@ def main():
         delete_retention_ms = dict(type='str'),
         file_delete_delay_ms = dict(type='str'),
         flush_messages = dict(type='int'),
+        flush_ms = dict(type='str'),
         follower_replication_throttled_replicas = dict(type='list'),
         index_interval_bytes = dict(type='int'),
         leader_replication_throttled_replicas = dict(type='list'),
@@ -728,7 +764,7 @@ def main():
     # Child-Parameter like sasl_username are left out aswell because
     # they get validated through their parent-param like sasl_mechanism
     params = ['name','partitions','replication_factor','bootstrap_server',\
-              'delete_retention_ms','file_delete_delay_ms','message_timestamp_difference_max_ms',\
+              'delete_retention_ms','file_delete_delay_ms','flush_ms','message_timestamp_difference_max_ms',\
               'min_compaction_lag_ms','retention_ms','segment_jitter_ms','segment_ms',\
               'sasl_mechanism']
 
@@ -741,6 +777,7 @@ def main():
         bootstrap_server = validate_broker,
         delete_retention_ms = validate_delete_retention_ms,
         file_delete_delay_ms = validate_file_delete_delay_ms,
+        flush_ms = validate_flush_ms,
         message_timestamp_difference_max_ms = validate_message_timestamp_difference_max_ms,
         min_compaction_lag_ms = validate_min_compaction_lag_ms,
         retention_ms = validate_retention_ms,
