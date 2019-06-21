@@ -454,6 +454,7 @@ def validate_factor(factor):
 # param: module = AnsibleModule, containing the possible configs
 # return: new_config = dictionary containing all set configs, type: dict
 def add_config_together(module):
+    #default-configuration
     default_configs = {
         "cleanup.policy":"delete",
         "compression.type":"producer",
@@ -481,6 +482,7 @@ def add_config_together(module):
         "unclean.leader.election.enable":"false",
         "message.downconversion.enable":"true"
     }
+    #retrieve user-set config
     configs = {
         "cleanup.policy":module.params["cleanup_policy"],
         "compression.type":module.params["compression_type"],
@@ -498,16 +500,26 @@ def add_config_together(module):
         "min.cleanable.dirty.ratio":module.params["min_cleanable_dirty_ratio"],
         "min.compaction.lag.ms":module.params["min_compaction_lag_ms"],
         "min.insync.replicas":module.params["min_insync_replicas"],
-        "preallocate":str(module.params["preallocate"]).lower(),
+        "preallocate":module.params["preallocate"],
         "retention.bytes":module.params["retention_bytes"],
         "retention.ms":module.params["retention_ms"],
         "segment.bytes":module.params["segment_bytes"],
         "segment.index.bytes":module.params["segment_index_bytes"],
         "segment.jitter.ms":module.params["segment_jitter_ms"],
         "segment.ms":module.params["segment_ms"],
-        "unclean.leader.election.enable":str(module.params["unclean_leader_election_enable"]).lower(),
-        "message.downconversion.enable":str(module.params["message_downconversion_enable"]).lower()
+        "unclean.leader.election.enable":module.params["unclean_leader_election_enable"],
+        "message.downconversion.enable":module.params["message_downconversion_enable"]
     }
+
+    # because java-bools are all lowercase, lower these bools for comparing
+    if configs['preallocate'] is not None:
+        configs['preallocate'] = str(configs['preallocate']).lower()
+
+    if configs['unclean.leader.election.enable'] is not None:
+        configs['unclean.leader.election.enable'] = str(configs['unclean.leader.election.enable']).lower()
+
+    if configs['message.downconversion.enable'] is not None:
+        configs['message.downconversion.enable'] = str(configs['message.downconversion.enable']).lower()
 
     new_conf = {}
     for conf, value in configs.items():
