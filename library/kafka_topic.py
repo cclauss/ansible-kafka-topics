@@ -331,7 +331,7 @@ def compare_config(topic, new_config):
             "index.interval.bytes":"4096",
             "leader.replication.throttled.replicas":"",
             "max.message.bytes":"1000012",
-            "message.format.version":"2.2-IV1",
+            "message.format.version":"2.1-IV2",
             "message.timestamp.difference.max.ms":"9223372036854775807",
             "message.timestamp.type":"CreateTime",
             "min.cleanable.dirty.ratio":"0.5",
@@ -349,6 +349,7 @@ def compare_config(topic, new_config):
         }
         for conf, defaultvalue in default_configs.items():
             if defaultvalue != old_conf[conf].value:
+                #pdb.set_trace()
                 return True
 
     else:
