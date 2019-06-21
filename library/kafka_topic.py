@@ -349,7 +349,6 @@ def compare_config(topic, new_config):
         }
         for conf, defaultvalue in default_configs.items():
             if defaultvalue != old_conf[conf].value:
-                #pdb.set_trace()
                 return True
 
     else:
@@ -505,15 +504,15 @@ def add_config_together(module):
         "min.cleanable.dirty.ratio":module.params["min_cleanable_dirty_ratio"],
         "min.compaction.lag.ms":module.params["min_compaction_lag_ms"],
         "min.insync.replicas":module.params["min_insync_replicas"],
-        "preallocate":module.params["preallocate"],
+        "preallocate":str(module.params["preallocate"]).lower(),
         "retention.bytes":module.params["retention_bytes"],
         "retention.ms":module.params["retention_ms"],
         "segment.bytes":module.params["segment_bytes"],
         "segment.index.bytes":module.params["segment_index_bytes"],
         "segment.jitter.ms":module.params["segment_jitter_ms"],
         "segment.ms":module.params["segment_ms"],
-        "unclean.leader.election.enable":module.params["unclean_leader_election_enable"],
-        "message.downconversion.enable":module.params["message_downconversion_enable"]
+        "unclean.leader.election.enable":str(module.params["unclean_leader_election_enable"]).lower(),
+        "message.downconversion.enable":str(module.params["message_downconversion_enable"]).lower()
     }
     new_conf = {}
     for conf, value in configs.items():
