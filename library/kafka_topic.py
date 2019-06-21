@@ -319,42 +319,9 @@ def compare_config(topic, new_config):
     y = list(des.values())
     old_conf = y[0].result()
 
-    if not bool(new_config):
-        default_configs = {
-            "cleanup.policy":"delete",
-            "compression.type":"producer",
-            "delete.retention.ms":"86400000",
-            "file.delete.delay.ms":"60000",
-            "flush.messages":"9223372036854775807",
-            "flush.ms":"9223372036854775807",
-            "follower.replication.throttled.replicas":"",
-            "index.interval.bytes":"4096",
-            "leader.replication.throttled.replicas":"",
-            "max.message.bytes":"1000012",
-            "message.format.version":"2.1-IV2",
-            "message.timestamp.difference.max.ms":"9223372036854775807",
-            "message.timestamp.type":"CreateTime",
-            "min.cleanable.dirty.ratio":"0.5",
-            "min.compaction.lag.ms":"0",
-            "min.insync.replicas":"1",
-            "preallocate":"false",
-            "retention.bytes":"-1",
-            "retention.ms":"604800000",
-            "segment.bytes":"1073741824",
-            "segment.index.bytes":"10485760",
-            "segment.jitter.ms":"0",
-            "segment.ms":"604800000",
-            "unclean.leader.election.enable":"false",
-            "message.downconversion.enable":"true"
-        }
-        for conf, defaultvalue in default_configs.items():
-            if defaultvalue != old_conf[conf].value:
-                return True
-
-    else:
-        for config, newvalue in new_config.items():       #iterate trough new-config-dict and compare with old-config-dict, using config as key
-            if str(newvalue) != old_conf[config].value:
-                return True
+    for config, newvalue in new_config.items():       #iterate trough new-config-dict and compare with old-config-dict, using config as key
+        if str(newvalue) != old_conf[config].value:
+            return True
 
     return False
 
@@ -487,6 +454,33 @@ def validate_factor(factor):
 # param: module = AnsibleModule, containing the possible configs
 # return: new_config = dictionary containing all set configs, type: dict
 def add_config_together(module):
+    default_configs = {
+        "cleanup.policy":"delete",
+        "compression.type":"producer",
+        "delete.retention.ms":"86400000",
+        "file.delete.delay.ms":"60000",
+        "flush.messages":"9223372036854775807",
+        "flush.ms":"9223372036854775807",
+        "follower.replication.throttled.replicas":"",
+        "index.interval.bytes":"4096",
+        "leader.replication.throttled.replicas":"",
+        "max.message.bytes":"1000012",
+        "message.format.version":"2.1-IV2",
+        "message.timestamp.difference.max.ms":"9223372036854775807",
+        "message.timestamp.type":"CreateTime",
+        "min.cleanable.dirty.ratio":"0.5",
+        "min.compaction.lag.ms":"0",
+        "min.insync.replicas":"1",
+        "preallocate":"false",
+        "retention.bytes":"-1",
+        "retention.ms":"604800000",
+        "segment.bytes":"1073741824",
+        "segment.index.bytes":"10485760",
+        "segment.jitter.ms":"0",
+        "segment.ms":"604800000",
+        "unclean.leader.election.enable":"false",
+        "message.downconversion.enable":"true"
+    }
     configs = {
         "cleanup.policy":module.params["cleanup_policy"],
         "compression.type":module.params["compression_type"],
@@ -514,10 +508,13 @@ def add_config_together(module):
         "unclean.leader.election.enable":str(module.params["unclean_leader_election_enable"]).lower(),
         "message.downconversion.enable":str(module.params["message_downconversion_enable"]).lower()
     }
+
     new_conf = {}
     for conf, value in configs.items():
         if configs[conf] is not None:
             new_conf[conf] = value
+        else:
+          new_conf[conf] = default_configs[conf]
     return new_conf
 
 # validate delete_retention_ms and convert to ms
