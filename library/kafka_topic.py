@@ -58,6 +58,7 @@ options:
       - Use the following format: "host:port".
     required: true
     type: list
+
   cleanup_policy:
     description:
       - Corresponds to the topic-config "cleanup.policy" from Apache Kafka.
@@ -65,10 +66,106 @@ options:
         size limits have been reached.
       - If set to "compact", old segments will be compacted when their retention time
         or size limits have been reached.
-    default: delete
     type: str
     choices: [ delete, compact ]
-  retention_time:
+    default: delete
+  compression_type:
+    description
+      - Corresponds to the topic-config "compression.type" from Apache Kafka.
+    type: str
+    choices: [uncompressed, zstd, lz4, snappy, gzip, producer ]
+    default: producer
+  delete_retention_ms:
+    description:
+      - Corresponds to the topic-config "delete.retention.ms" from Apache Kafka.
+      - Use the following format: "%d%h%m%s%ms".
+    type: str
+    default: 86400000
+  file_delete_delay_ms:
+    description:
+      - Corresponds to the topic-config "file.delete.delay.ms" from Apache Kafka.
+      - Use the following format: "%d%h%m%s%ms".
+    type: str
+    default: 60000
+  flush_messages:
+    description:
+      - Corresponds to the topic-config "flush.messages" from Apache Kafka.
+    type: int
+    default: 9223372036854775807
+  flush_ms:
+    description:
+      - Corresponds to the topic-config "flush.ms" from Apache Kafka.
+      - Use the following format: "%d%h%m%s%ms".
+    type: str
+    default: 9223372036854775807
+  follower_replication_throttled_replicas:
+    description:
+      - Corresponds to the topic-config "follower.replication.throttled.replicas" from Apache Kafka.
+    type: list
+    default: ""
+  index_interval_bytes:
+    description:
+      - Corresponds to the topic-config "index.interval.bytes" from Apache Kafka.
+    type: int
+    default: 4096
+  leader_replication_throttled_replicas:
+    description:
+      - Corresponds to the topic-config "leader.replication.throttled.replicas" from Apache Kafka.
+    type: list
+    default: ""
+  max_message_bytes:
+    description:
+      - Corresponds to the topic-config "max.message.bytes" from Apache Kafka.
+    type: int
+    default: 1000012
+  message_format_version:
+    description:
+      - Corresponds to the topic-config "message.format.version" from Apache Kafka.
+    type: str
+    choices: [0.8.0, 0.8.1, 0.8.2, 0.9.0, 0.10.0-IV0, 0.10.0-IV1, 0.10.1-IV0, 0.10.1-IV1, 0.10.1-IV2, 0.10.2-IV0, 0.11.0-IV0, 0.11.0-IV1, 0.11.0-IV2, 1.0-IV0, 1.1-IV0, 2.0-IV0, 2.0-IV1, 2.1-IV0, 2.1-IV1, 2.1-IV2, 2.2-IV0, 2.2-IV1]
+    default: 2.2-IV1
+  message_timestamp_difference_max_ms:
+    description:
+      - Corresponds to the topic-config "message.timestamp.difference.max.ms" from Apache Kafka.
+      - Use the following format: "%d%h%m%s%ms".
+    type: str
+    default: 9223372036854775807
+  message_timestamp_type:
+    description:
+      - Corresponds to the topic-config "message.timestamp.type" from Apache Kafka.
+    type: str
+    choices: [CreateTime, LogAppendTime]
+    default: CreateTime
+  min_cleanable_dirty_ratio:
+    description:
+      - Corresponds to the topic-config "min.cleanable.dirty.ratio" from Apache Kafka.
+      - Range: 0-1
+    type: float
+    default: 0.5
+  min_compaction_lag_ms:
+    description:
+      - Corresponds to the topic-config "min.compaction.lag.ms" from Apache Kafka.
+      - Use the following format: "%d%h%m%s%ms".
+    type: int
+    default: 0
+  min_insync_replicas:
+    description:
+      - Corresponds to the topic-config "min.insync.replicas" from Apache Kafka.
+      - Must be greater than 0.
+    type: int
+    default: 1
+  preallocate:
+    description:
+      - Corresponds to the topic-config "preallocate" from Apache Kafka.
+    type: boolean
+    default: false
+  retention_bytes:
+    description:
+      - Corresponds to the topic-config "retention.bytes" from Apache Kafka.
+      - Setting it to "-1" means unlimited bytes-size.
+    type: int
+    default: -1
+  retention_ms:
     description:
       - Corresponds to the topic-config "retention.ms" from Apache Kafka.
       - How long a log will be retained before being discarded.
@@ -76,6 +173,39 @@ options:
       - Else use the following format: "%d%h%m%s%ms".
     default: 604800000ms (==7d)
     type: str
+  segment_bytes:
+    description:
+      - Corresponds to the topic-config "segment.bytes" from Apache Kafka.
+      - Must be greater than 13.
+    type: int
+    default: 1073741824
+  segment_index_bytes:
+    description:
+      - Corresponds to the topic-config "segment.index.bytes" from Apache Kafka.
+    type: int
+    default: 10485760
+  segment_jitter_ms:
+    description:
+      - Corresponds to the topic-config "segment.jitter.ms" from Apache Kafka.
+      - Use the following format: "%d%h%m%s%ms".
+    type: int
+    default: 0
+  segment_ms:
+    description:
+      - Corresponds to the topic-config "segment.ms" from Apache Kafka.
+      - Use the following format: "%d%h%m%s%ms".
+    type: int
+    default: 604800000
+  unclean_leader_election_enable:
+    description:
+      - Corresponds to the topic-config "unclean.leader.election.enable" from Apache Kafka.
+    type: boolean
+    default: false
+  message_downconversion_enable:
+    description:
+      - Corresponds to the topic-config "message.downconversion.enable" from Apache Kafka.
+    type: boolean
+    default: true
 '''
 EXAMPLES = '''
 ---
@@ -99,7 +229,7 @@ EXAMPLES = '''
     replication_factor: 2
     bootstrap_server:
       - 127.0.0.4:1234
-    retention_time: 2d12h
+    retention_ms: 2d12h
 
 #delete topic
 - name: delete topic "bar"
@@ -189,19 +319,9 @@ def compare_config(topic, new_config):
     y = list(des.values())
     old_conf = y[0].result()
 
-    if not bool(new_config):
-        default_configs = {
-            "cleanup.policy":"delete",
-            "retention.ms":"604800000"
-        }
-        for conf, defaultvalue in default_configs.items():
-            if defaultvalue != old_conf[conf].value:
-                return True
-
-    else:
-        for config, newvalue in new_config.items():       #iterate trough new-config-dict and compare with old-config-dict, using config as key
-            if str(newvalue) != old_conf[config].value:
-                return True
+    for config, newvalue in new_config.items():       #iterate trough new-config-dict and compare with old-config-dict, using config as key
+        if str(newvalue) != old_conf[config].value:
+            return True
 
     return False
 
@@ -222,7 +342,6 @@ def modify_config(topic, new_config):
         resource[0].set_config(config,newvalue)
 
     try:
-        pdb.set_trace()
         des = admin.alter_configs(resource)             #alter topic with new config
         y = list(des.values())
         conf = y[0].result()                        #use .result-func for finalizing
@@ -335,32 +454,134 @@ def validate_factor(factor):
 # param: module = AnsibleModule, containing the possible configs
 # return: new_config = dictionary containing all set configs, type: dict
 def add_config_together(module):
+    #default-configuration
+    default_configs = {
+        "cleanup.policy":"delete",
+        "compression.type":"producer",
+        "delete.retention.ms":"86400000",
+        "file.delete.delay.ms":"60000",
+        "flush.messages":"9223372036854775807",
+        "flush.ms":"9223372036854775807",
+        "follower.replication.throttled.replicas":"",
+        "index.interval.bytes":"4096",
+        "leader.replication.throttled.replicas":"",
+        "max.message.bytes":"1000012",
+        "message.format.version":"2.1-IV2",
+        "message.timestamp.difference.max.ms":"9223372036854775807",
+        "message.timestamp.type":"CreateTime",
+        "min.cleanable.dirty.ratio":"0.5",
+        "min.compaction.lag.ms":"0",
+        "min.insync.replicas":"1",
+        "preallocate":"false",
+        "retention.bytes":"-1",
+        "retention.ms":"604800000",
+        "segment.bytes":"1073741824",
+        "segment.index.bytes":"10485760",
+        "segment.jitter.ms":"0",
+        "segment.ms":"604800000",
+        "unclean.leader.election.enable":"false",
+        "message.downconversion.enable":"true"
+    }
+    #retrieve user-set config
     configs = {
         "cleanup.policy":module.params["cleanup_policy"],
-        "retention.ms":module.params["retention_time"],
-        "compression.type":module.params["compression_type"]
+        "compression.type":module.params["compression_type"],
+        "delete.retention.ms":module.params["delete_retention_ms"],
+        "file.delete.delay.ms":module.params["file_delete_delay_ms"],
+        "flush.messages":module.params["flush_messages"],
+        "flush.ms":module.params["flush_ms"],
+        "follower.replication.throttled.replicas":module.params["follower_replication_throttled_replicas"],
+        "index.interval.bytes":module.params["index_interval_bytes"],
+        "leader.replication.throttled.replicas":module.params["leader_replication_throttled_replicas"],
+        "max.message.bytes":module.params["max_message_bytes"],
+        "message.format.version":module.params["message_format_version"],
+        "message.timestamp.difference.max.ms":module.params["message_timestamp_difference_max_ms"],
+        "message.timestamp.type":module.params["message_timestamp_type"],
+        "min.cleanable.dirty.ratio":module.params["min_cleanable_dirty_ratio"],
+        "min.compaction.lag.ms":module.params["min_compaction_lag_ms"],
+        "min.insync.replicas":module.params["min_insync_replicas"],
+        "preallocate":module.params["preallocate"],
+        "retention.bytes":module.params["retention_bytes"],
+        "retention.ms":module.params["retention_ms"],
+        "segment.bytes":module.params["segment_bytes"],
+        "segment.index.bytes":module.params["segment_index_bytes"],
+        "segment.jitter.ms":module.params["segment_jitter_ms"],
+        "segment.ms":module.params["segment_ms"],
+        "unclean.leader.election.enable":module.params["unclean_leader_election_enable"],
+        "message.downconversion.enable":module.params["message_downconversion_enable"]
     }
+
+    # because java-bools are all lowercase, lower these bools for comparing
+    if configs['preallocate'] is not None:
+        configs['preallocate'] = str(configs['preallocate']).lower()
+
+    if configs['unclean.leader.election.enable'] is not None:
+        configs['unclean.leader.election.enable'] = str(configs['unclean.leader.election.enable']).lower()
+
+    if configs['message.downconversion.enable'] is not None:
+        configs['message.downconversion.enable'] = str(configs['message.downconversion.enable']).lower()
+
     new_conf = {}
     for conf, value in configs.items():
         if configs[conf] is not None:
             new_conf[conf] = value
+        else:
+          new_conf[conf] = default_configs[conf]
     return new_conf
 
-# validate retention time and convert to ms
-# param: retention_time = retention-time, type: str, pattern: %d%h%m%s%ms
-# return: retention-time in ms unless set to unlimited, type: int or string
-def validate_retention_ms(retention_time):
-    if retention_time == "-1":     #sets retention-time to unlimited
-        return retention_time
+# validate delete_retention_ms and convert to ms
+# type: str, pattern: %d%h%m%s%ms
+def validate_delete_retention_ms(delete_retention_ms):
+    convert_time_ms(delete_retention_ms,"delete_retention_ms")
 
-    #try to parse retention_time with regex into groups, split by timetype
-    rema = re.match( r"(?P<days>\d+d)?(?P<hours>\d+h)?(?P<minutes>\d+m)?(?P<seconds>\d+s)?(?P<miliseconds>\d+m)?",retention_time)
+# validate file_delete_delay_ms and convert to ms
+# type: str, pattern: %d%h%m%s%ms
+def validate_file_delete_delay_ms(file_delete_delay_ms):
+    convert_time_ms(file_delete_delay_ms,"file_delete_delay_ms")
+
+# validate flush_ms and convert to ms
+# type: str, pattern: %d%h%m%s%ms
+def validate_flush_ms(flush_ms):
+    convert_time_ms(flush_ms,"flush_ms")
+
+# validate message_timestamp_difference_max_ms and convert to ms
+# type: str, pattern: %d%h%m%s%ms
+def validate_message_timestamp_difference_max_ms(message_timestamp_difference_max_ms):
+    convert_time_ms(message_timestamp_difference_max_ms,"message_timestamp_difference_max_ms")
+
+# validate min_compaction_lag_ms and convert to ms
+# type: str, pattern: %d%h%m%s%ms
+def validate_min_compaction_lag_ms(min_compaction_lag_ms):
+    convert_time_ms(min_compaction_lag_ms,"min_compaction_lag_ms")
+
+# validate retention time and convert to ms
+# param: retention_ms = retention-time, type: str, pattern: %d%h%m%s%ms
+def validate_retention_ms(retention_ms):
+    if retention_ms == "-1":     #sets retention-time to unlimited
+        return retention_ms
+    convert_time_ms(retention_ms,"retention_ms")
+
+# validate segment_jitter_ms and convert to ms
+# type: str, pattern: %d%h%m%s%ms
+def validate_segment_jitter_ms(segment_jitter_ms):
+    convert_time_ms(segment_jitter_ms,"segment_jitter_ms")
+
+# validate segment_ms and convert to ms
+# type: str, pattern: %d%h%m%s%ms
+def validate_segment_ms(segment_ms):
+    convert_time_ms(segment_ms,"segment_ms")
+
+# convert user-given time to ms
+# param: time_ms = user-given time, config_type = for setting config and error-msg
+def convert_time_ms(time_ms,config_type):
+    #try to parse retention_ms with regex into groups, split by timetype
+    rema = re.match( r"(?P<days>\d+d)?(?P<hours>\d+h)?(?P<minutes>\d+m)?(?P<seconds>\d+s)?(?P<miliseconds>\d+m)?",time_ms)
 
     t = rema.span()
     if t[1] == 0:
-        msg = ("Could not parse given retention-time: %s into ms." \
+        msg = ("Could not parse given %s: %s into ms." \
               " Please use the following pattern: %%d%%h%%m%%s%%ms." \
-              %(retention_time)
+              %(config_type,time_ms)
               )
         fail_module(msg)
 
@@ -381,15 +602,19 @@ def validate_retention_ms(retention_time):
         i = i+1
 
     if (ms_total >= 2**63):
-        msg = ("Your chosen retention-time is way too long." \
+        msg = ("Your chosen %s is way too long." \
               " Retention-time can not be over 2^63ms." \
               " You set %s as retention, which results in %s ms." \
-              %(retention_time, ms_total)
+              %(config_type,time_ms,ms_total)
               )
         fail_module(msg)
 
-    module.params['retention_time'] =  ms_total
+    module.params[config_type] =  ms_total
 
+# convert user-given storage size into bytes
+# param: storage, config_type: for setting converted storage
+def convert_storage_bytes(storage,config_type):
+    pass
 
 
 ##########################################
@@ -539,7 +764,35 @@ def main():
         bootstrap_server = dict(type='list', required=True),
         cleanup_policy = dict(type='str', choices=['compact','delete']),
         compression_type = dict(type='str', choices=['uncompressed','zstd','lz4','snappy','gzip','producer']),
-        retention_time = dict(type='str'),
+        delete_retention_ms = dict(type='str'),
+        file_delete_delay_ms = dict(type='str'),
+        flush_messages = dict(type='int'),
+        flush_ms = dict(type='str'),
+        follower_replication_throttled_replicas = dict(type='list'),
+        index_interval_bytes = dict(type='int'),
+        leader_replication_throttled_replicas = dict(type='list'),
+        max_message_bytes = dict(type='int'),
+        message_format_version = dict(type='str', \
+            choices=['0.8.0', '0.8.1', '0.8.2', '0.9.0', \
+                    '0.10.0-IV0', '0.10.0-IV1', '0.10.1-IV0', \
+                    '0.10.1-IV1', '0.10.1-IV2', '0.10.2-IV0', \
+                    '0.11.0-IV0', '0.11.0-IV1', '0.11.0-IV2', \
+                    '1.0-IV0', '1.1-IV0', '2.0-IV0', '2.0-IV1', \
+                    '2.1-IV0', '2.1-IV1', '2.1-IV2', '2.2-IV0', '2.2-IV1']),
+        message_timestamp_difference_max_ms = dict(type='str'),
+        message_timestamp_type = dict(type='str', choices=['CreateTime', 'LogAppendTime']),
+        min_cleanable_dirty_ratio = dict(type='float'),
+        min_compaction_lag_ms = dict(type='str'),
+        min_insync_replicas = dict(type='int'),
+        preallocate = dict(type='bool'),
+        retention_bytes = dict(type='int'),
+        retention_ms = dict(type='str'),
+        segment_bytes = dict(type='int'),
+        segment_index_bytes = dict(type='int'),
+        segment_jitter_ms = dict(type='str'),
+        segment_ms = dict(type='str'),
+        unclean_leader_election_enable = dict(type='bool'),
+        message_downconversion_enable = dict(type='bool'),
         sasl_mechanism = dict(type='str', choices=['GSSAPI','PLAIN','SCRAM-SHA-256','SCRAM-SHA-512','OAUTHBEARER']),
         sasl_password = dict(type='str'),
         sasl_username = dict(type='str'),
@@ -563,29 +816,33 @@ def main():
     # set topicname as result as soon as possible, for meaningful error-messages
     result['name'] = module.params['name']
 
-    # param-list for later iterating through it for validating.
+    # map param to corresponding validation-function
     # Choice-Parameter are left out because Ansible validates them
     # Child-Parameter like sasl_username are left out aswell because
     # they get validated through their parent-param like sasl_mechanism
-    params = ['name','partitions','replication_factor','bootstrap_server',\
-              'retention_time',\
-              'sasl_mechanism']
-
-
-    #map validation-function to corresponding params
     params_valid_dict = dict(
         name = validate_name,
         partitions = validate_factor,
         replication_factor = validate_factor,
         bootstrap_server = validate_broker,
-        retention_time = validate_retention_ms,
+        delete_retention_ms = validate_delete_retention_ms,
+        file_delete_delay_ms = validate_file_delete_delay_ms,
+        flush_ms = validate_flush_ms,
+        message_timestamp_difference_max_ms = validate_message_timestamp_difference_max_ms,
+        min_compaction_lag_ms = validate_min_compaction_lag_ms,
+        retention_ms = validate_retention_ms,
+        segment_jitter_ms = validate_segment_jitter_ms,
+        segment_ms = validate_segment_ms,
         sasl_mechanism = validate_sasl_mechanism
     )
 
+    # loop through params_valid_dict and validate all params which are set (not none)
     # validate all parameters
-    for element in params:
-        if module.params[element] is not None:
-            params_valid_dict[element](module.params[element])
+    for key in params_valid_dict.keys():
+        if module.params[key] is not None:
+            # params_valid_dict[key] returns valid-func.
+            # Pass as param for the valid-func the user-set param with module.params[key]
+            params_valid_dict[key](module.params[key])
 
 
     #create admin_conf-dict for connection-params like authentication
