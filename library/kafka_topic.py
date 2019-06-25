@@ -611,6 +611,10 @@ def convert_time_ms(time_ms,config_type):
 
     module.params[config_type] =  ms_total
 
+# convert user-given storage size into bytes
+# param: storage, config_type: for setting converted storage
+def convert_storage_bytes(storage,config_type):
+    pass
 
 
 ##########################################
@@ -812,17 +816,10 @@ def main():
     # set topicname as result as soon as possible, for meaningful error-messages
     result['name'] = module.params['name']
 
-    # param-list for later iterating through it for validating.
+    # map param to corresponding validation-function
     # Choice-Parameter are left out because Ansible validates them
     # Child-Parameter like sasl_username are left out aswell because
     # they get validated through their parent-param like sasl_mechanism
-    params = ['name','partitions','replication_factor','bootstrap_server',\
-              'delete_retention_ms','file_delete_delay_ms','flush_ms','message_timestamp_difference_max_ms',\
-              'min_compaction_lag_ms','retention_ms','segment_jitter_ms','segment_ms',\
-              'sasl_mechanism']
-
-
-    #map validation-function to corresponding params
     params_valid_dict = dict(
         name = validate_name,
         partitions = validate_factor,
@@ -839,10 +836,13 @@ def main():
         sasl_mechanism = validate_sasl_mechanism
     )
 
+    # loop through params_valid_dict and validate all params which are set (not none)
     # validate all parameters
-    for element in params:
-        if module.params[element] is not None:
-            params_valid_dict[element](module.params[element])
+    for key in params_valid_dict.keys():
+        if module.params[key] is not None:
+            # params_valid_dict[key] returns valid-func.
+            # Pass as param for the valid-func the user-set param with module.params[key]
+            params_valid_dict[key](module.params[key])
 
 
     #create admin_conf-dict for connection-params like authentication
