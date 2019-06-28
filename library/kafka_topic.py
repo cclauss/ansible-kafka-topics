@@ -269,10 +269,13 @@ import pdb
 #                                        #
 ##########################################
 
-# check if topic exists
-# param: topic = topicname, type: str
-# return: True if topic exists, False if not, type: bool
 def check_topic(topic):
+    # type: (str) -> bool
+    """check if topic exists
+
+    Keyword arguments:
+    topic -- topicname
+    """
     topics = admin.list_topics(timeout=5).topics    #type(topics)=dict
     try:
         topics[topic]
