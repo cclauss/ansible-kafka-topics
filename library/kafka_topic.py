@@ -533,45 +533,45 @@ def add_config_together(module):
     return new_conf
 
 # validate delete_retention_ms and convert to ms
-# type: str, pattern: %d%h%m%s%ms
 def validate_delete_retention_ms(delete_retention_ms):
+    # type: str, pattern: %d%h%m%s%ms
     convert_time_ms(delete_retention_ms,"delete_retention_ms")
 
 # validate file_delete_delay_ms and convert to ms
-# type: str, pattern: %d%h%m%s%ms
 def validate_file_delete_delay_ms(file_delete_delay_ms):
+    # type: str, pattern: %d%h%m%s%ms
     convert_time_ms(file_delete_delay_ms,"file_delete_delay_ms")
 
 # validate flush_ms and convert to ms
-# type: str, pattern: %d%h%m%s%ms
 def validate_flush_ms(flush_ms):
+    # type: str, pattern: %d%h%m%s%ms
     convert_time_ms(flush_ms,"flush_ms")
 
 # validate message_timestamp_difference_max_ms and convert to ms
-# type: str, pattern: %d%h%m%s%ms
 def validate_message_timestamp_difference_max_ms(message_timestamp_difference_max_ms):
+    # type: str, pattern: %d%h%m%s%ms
     convert_time_ms(message_timestamp_difference_max_ms,"message_timestamp_difference_max_ms")
 
 # validate min_compaction_lag_ms and convert to ms
-# type: str, pattern: %d%h%m%s%ms
 def validate_min_compaction_lag_ms(min_compaction_lag_ms):
+    # type: str, pattern: %d%h%m%s%ms
     convert_time_ms(min_compaction_lag_ms,"min_compaction_lag_ms")
 
 # validate retention time and convert to ms
-# param: retention_ms = retention-time, type: str, pattern: %d%h%m%s%ms
 def validate_retention_ms(retention_ms):
+    # type: str, pattern: %d%h%m%s%ms
     if retention_ms == "-1":     #sets retention-time to unlimited
         return retention_ms
     convert_time_ms(retention_ms,"retention_ms")
 
 # validate segment_jitter_ms and convert to ms
-# type: str, pattern: %d%h%m%s%ms
 def validate_segment_jitter_ms(segment_jitter_ms):
+    # type: str, pattern: %d%h%m%s%ms
     convert_time_ms(segment_jitter_ms,"segment_jitter_ms")
 
 # validate segment_ms and convert to ms
-# type: str, pattern: %d%h%m%s%ms
 def validate_segment_ms(segment_ms):
+    # type: str, pattern: %d%h%m%s%ms
     convert_time_ms(segment_ms,"segment_ms")
 
 # convert user-given time to ms
