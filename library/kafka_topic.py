@@ -297,13 +297,13 @@ def compare_part_rep(topic, partitions, replication_factor):
         msg = ("It is not possible to reduce the amount of partitions." \
               " At the moment, there are %s partitions for the topic %s." \
               " You tried to set %s as the new amount of partitions." \
-              %(old_part,topic,partitions)
+              %(old_part, topic, partitions)
               )
         fail_module(msg)
     if replication_factor != old_rep:
         msg = ("It is not possible to modify the replication_factor." \
               " At the moment, it is set to %s and you tried to set it to %s." \
-              %(old_rep,replication_factor)
+              %(old_rep, replication_factor)
               )
         fail_module(msg)
     if partitions == old_part:
@@ -322,7 +322,8 @@ def compare_config(topic, new_config):
     y = list(des.values())
     old_conf = y[0].result()
 
-    for config, newvalue in new_config.items():       #iterate trough new-config-dict and compare with old-config-dict, using config as key
+    #iterate trough new-config-dict and compare with old-config-dict, using config as key
+    for config, newvalue in new_config.items():       
         if str(newvalue) != old_conf[config].value:
             return True
 
@@ -342,13 +343,13 @@ def modify_config(topic, new_config):
     old_conf = y[0].result()
 
     for config, newvalue in new_config.items():       #iterate trough new-config-dict and set them on topic-resource
-        resource[0].set_config(config,newvalue)
+        resource[0].set_config(config, newvalue)
 
     try:
         des = admin.alter_configs(resource)             #alter topic with new config
         y = list(des.values())
-        conf = y[0].result()                        #use .result-func for finalizing
-    except Exception:
+        y[0].result()                        #use .result-func for finalizing
+    except KafkaException:
         msg = ("Failed to finalize config-change for topic %s" \
               %(topic)
               )
@@ -365,8 +366,8 @@ def modify_part(topic, new_part):
     try:
         fs = admin.create_partitions(new_parts, validate_only=False)
         y = list(fs.values())
-        conf = y[0].result()
-    except Exception:
+        y[0].result()
+    except KafkaException:
         msg = ("Failed to finalize partition-change for topic %s" \
               %(topic)
               )
@@ -380,13 +381,13 @@ def modify_part(topic, new_part):
 # param: new_conf = configuration-dict for topic, for example containing retention-time, type: dict
 # return: no return
 def create_topic(topic, partitions, replication_factor, new_conf):
-    topic = [NewTopic(topic, num_partitions=partitions,  replication_factor=replication_factor, config=new_conf)]
+    topic = [NewTopic(topic, num_partitions=partitions, replication_factor=replication_factor, config=new_conf)]
 
     try:
         fs = admin.create_topics(topic)
         y = list(fs.values())
-        new_topic = y[0].result()
-    except Exception:
+        y[0].result()
+    except KafkaException:
         msg = ("Failed to create topic %s." \
               %(topic)
               )
@@ -402,8 +403,8 @@ def delete_topic(topic):
     try:
         fs = admin.delete_topics(topic)
         y = list(fs.values())
-        deleted_topic = y[0].result()
-    except Exception:
+        y[0].result()
+    except KafkaException:
         msg = ("Failed to delete topic %s." \
               %(topic)
               )
@@ -529,62 +530,62 @@ def add_config_together(module):
         if configs[conf] is not None:
             new_conf[conf] = value
         else:
-          new_conf[conf] = default_configs[conf]
+            new_conf[conf] = default_configs[conf]
     return new_conf
 
 # validate delete_retention_ms and convert to ms
 def validate_delete_retention_ms(delete_retention_ms):
     # type: str, pattern: %d%h%m%s%ms
-    convert_time_ms(delete_retention_ms,"delete_retention_ms")
+    convert_time_ms(delete_retention_ms, "delete_retention_ms")
 
 # validate file_delete_delay_ms and convert to ms
 def validate_file_delete_delay_ms(file_delete_delay_ms):
-    # type: str, pattern: %d%h%m%s%ms
-    convert_time_ms(file_delete_delay_ms,"file_delete_delay_ms")
+    # type: str,  pattern: %d%h%m%s%ms
+    convert_time_ms(file_delete_delay_ms, "file_delete_delay_ms")
 
 # validate flush_ms and convert to ms
 def validate_flush_ms(flush_ms):
-    # type: str, pattern: %d%h%m%s%ms
-    convert_time_ms(flush_ms,"flush_ms")
+    # type: str,  pattern: %d%h%m%s%ms
+    convert_time_ms(flush_ms, "flush_ms")
 
 # validate message_timestamp_difference_max_ms and convert to ms
 def validate_message_timestamp_difference_max_ms(message_timestamp_difference_max_ms):
-    # type: str, pattern: %d%h%m%s%ms
-    convert_time_ms(message_timestamp_difference_max_ms,"message_timestamp_difference_max_ms")
+    # type: str,  pattern: %d%h%m%s%ms
+    convert_time_ms(message_timestamp_difference_max_ms, "message_timestamp_difference_max_ms")
 
 # validate min_compaction_lag_ms and convert to ms
 def validate_min_compaction_lag_ms(min_compaction_lag_ms):
-    # type: str, pattern: %d%h%m%s%ms
-    convert_time_ms(min_compaction_lag_ms,"min_compaction_lag_ms")
+    # type: str,  pattern: %d%h%m%s%ms
+    convert_time_ms(min_compaction_lag_ms, "min_compaction_lag_ms")
 
 # validate retention time and convert to ms
 def validate_retention_ms(retention_ms):
-    # type: str, pattern: %d%h%m%s%ms
+    # type: str,  pattern: %d%h%m%s%ms
     if retention_ms == "-1":     #sets retention-time to unlimited
         return retention_ms
-    convert_time_ms(retention_ms,"retention_ms")
+    convert_time_ms(retention_ms, "retention_ms")
 
 # validate segment_jitter_ms and convert to ms
 def validate_segment_jitter_ms(segment_jitter_ms):
-    # type: str, pattern: %d%h%m%s%ms
-    convert_time_ms(segment_jitter_ms,"segment_jitter_ms")
+    # type: str,  pattern: %d%h%m%s%ms
+    convert_time_ms(segment_jitter_ms, "segment_jitter_ms")
 
 # validate segment_ms and convert to ms
 def validate_segment_ms(segment_ms):
-    # type: str, pattern: %d%h%m%s%ms
-    convert_time_ms(segment_ms,"segment_ms")
+    # type: str,  pattern: %d%h%m%s%ms
+    convert_time_ms(segment_ms, "segment_ms")
 
 # convert user-given time to ms
 # param: time_ms = user-given time, config_type = for setting config and error-msg
 def convert_time_ms(time_ms,config_type):
     #try to parse retention_ms with regex into groups, split by timetype
-    rema = re.match( r"(?P<days>\d+d)?(?P<hours>\d+h)?(?P<minutes>\d+m)?(?P<seconds>\d+s)?(?P<miliseconds>\d+m)?",time_ms)
+    rema = re.match( r"(?P<days>\d+d)?(?P<hours>\d+h)?(?P<minutes>\d+m)?(?P<seconds>\d+s)?(?P<miliseconds>\d+m)?", time_ms)
 
     t = rema.span()
     if t[1] == 0:
         msg = ("Could not parse given %s: %s into ms." \
               " Please use the following pattern: %%d%%h%%m%%s%%ms." \
-              %(config_type,time_ms)
+              %(config_type, time_ms)
               )
         fail_module(msg)
 
@@ -595,28 +596,29 @@ def convert_time_ms(time_ms,config_type):
     miliseconds = rema.group("miliseconds")
 
     timetype = [days, hours, minutes, seconds, miliseconds]
-    multiplier = [86400000,3600000,60000,1000,1]
+    multiplier = [86400000, 3600000, 60000, 1000, 1]
     ms_total = 0
     i = 0
 
     for t_type in timetype:     #convert to ms and add together
         if t_type is not None:
-            ms_total = ms_total + (int(t_type[:-1])*multiplier[i])     #[:-1] cuts of last char (which indicates timetype and is not an int)
+            #[:-1] cuts of last char (which indicates timetype and is not an int)
+            ms_total = ms_total + (int(t_type[:-1])*multiplier[i])
         i = i+1
 
-    if (ms_total >= 2**63):
+    if ms_total >= 2**63:
         msg = ("Your chosen %s is way too long." \
               " Retention-time can not be over 2^63ms." \
               " You set %s as retention, which results in %s ms." \
-              %(config_type,time_ms,ms_total)
+              %(config_type, time_ms, ms_total)
               )
         fail_module(msg)
 
-    module.params[config_type] =  ms_total
+    module.params[config_type] = ms_total
 
 # convert user-given storage size into bytes
 # param: storage, config_type: for setting converted storage
-def convert_storage_bytes(storage,config_type):
+def convert_storage_bytes(storage, config_type):
     pass
 
 
@@ -661,7 +663,7 @@ def validate_ipv4(broker):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
         #try to make a connection
-        sock.connect((ip,port))
+        sock.connect((ip, port))
         sock.close()
     except socket.error:
         sock.close()
@@ -715,9 +717,9 @@ def validate_sasl_mechanism(sasl_mechanism):
 # also check if ca-location is set
 # set each value in admin_conf
 def validate_sasl_PLAIN():
-    if module.params['sasl_username'] == None \
-    or module.params['sasl_password'] == None \
-    or module.params['security_protocol'] == None:
+    if module.params['sasl_username'] is None \
+    or module.params['sasl_password'] is None \
+    or module.params['security_protocol'] is None:
         msg = ("If you choose PLAIN as sasl_mechanism," \
               " you also need to set: sasl_username," \
               " sasl_password and security_protocol." \
@@ -760,53 +762,55 @@ def main():
 
     # initialize object AnsibleModule
     module_args = dict(
-        name = dict(type='str', required=True),
-        state = dict(type='str', required=True, choices=['absent','present']),
-        partitions = dict(type='int', required=True),
-        replication_factor = dict(type='int', required=True),
-        bootstrap_server = dict(type='list', required=True),
-        cleanup_policy = dict(type='str', choices=['compact','delete']),
-        compression_type = dict(type='str', choices=['uncompressed','zstd','lz4','snappy','gzip','producer']),
-        delete_retention_ms = dict(type='str'),
-        file_delete_delay_ms = dict(type='str'),
-        flush_messages = dict(type='int'),
-        flush_ms = dict(type='str'),
-        follower_replication_throttled_replicas = dict(type='list'),
-        index_interval_bytes = dict(type='int'),
-        leader_replication_throttled_replicas = dict(type='list'),
-        max_message_bytes = dict(type='int'),
-        message_format_version = dict(type='str', \
+        name=dict(type='str', required=True),
+        state=dict(type='str', required=True, choices=['absent', 'present']),
+        partitions=dict(type='int', required=True),
+        replication_factor=dict(type='int', required=True),
+        bootstrap_server=dict(type='list', required=True),
+        cleanup_policy=dict(type='str', choices=['compact', 'delete']),
+        compression_type=dict(type='str', choices=['uncompressed', 'zstd', 'lz4', 'snappy', \
+                'gzip', 'producer']),
+        delete_retention_ms=dict(type='str'),
+        file_delete_delay_ms=dict(type='str'),
+        flush_messages=dict(type='int'),
+        flush_ms=dict(type='str'),
+        follower_replication_throttled_replicas=dict(type='list'),
+        index_interval_bytes=dict(type='int'),
+        leader_replication_throttled_replicas=dict(type='list'),
+        max_message_bytes=dict(type='int'),
+        message_format_version=dict(type='str', \
             choices=['0.8.0', '0.8.1', '0.8.2', '0.9.0', \
                     '0.10.0-IV0', '0.10.0-IV1', '0.10.1-IV0', \
                     '0.10.1-IV1', '0.10.1-IV2', '0.10.2-IV0', \
                     '0.11.0-IV0', '0.11.0-IV1', '0.11.0-IV2', \
                     '1.0-IV0', '1.1-IV0', '2.0-IV0', '2.0-IV1', \
                     '2.1-IV0', '2.1-IV1', '2.1-IV2', '2.2-IV0', '2.2-IV1']),
-        message_timestamp_difference_max_ms = dict(type='str'),
-        message_timestamp_type = dict(type='str', choices=['CreateTime', 'LogAppendTime']),
-        min_cleanable_dirty_ratio = dict(type='float'),
-        min_compaction_lag_ms = dict(type='str'),
-        min_insync_replicas = dict(type='int'),
-        preallocate = dict(type='bool'),
-        retention_bytes = dict(type='int'),
-        retention_ms = dict(type='str'),
-        segment_bytes = dict(type='int'),
-        segment_index_bytes = dict(type='int'),
-        segment_jitter_ms = dict(type='str'),
-        segment_ms = dict(type='str'),
-        unclean_leader_election_enable = dict(type='bool'),
-        message_downconversion_enable = dict(type='bool'),
-        sasl_mechanism = dict(type='str', choices=['GSSAPI','PLAIN','SCRAM-SHA-256','SCRAM-SHA-512','OAUTHBEARER']),
-        sasl_password = dict(type='str'),
-        sasl_username = dict(type='str'),
-        security_protocol = dict(type='str', choices=['plaintext','ssl']),
-        ca_location = dict(type='str')
+        message_timestamp_difference_max_ms=dict(type='str'),
+        message_timestamp_type=dict(type='str', choices=['CreateTime', 'LogAppendTime']),
+        min_cleanable_dirty_ratio=dict(type='float'),
+        min_compaction_lag_ms=dict(type='str'),
+        min_insync_replicas=dict(type='int'),
+        preallocate=dict(type='bool'),
+        retention_bytes=dict(type='int'),
+        retention_ms=dict(type='str'),
+        segment_bytes=dict(type='int'),
+        segment_index_bytes=dict(type='int'),
+        segment_jitter_ms=dict(type='str'),
+        segment_ms=dict(type='str'),
+        unclean_leader_election_enable=dict(type='bool'),
+        message_downconversion_enable=dict(type='bool'),
+        sasl_mechanism=dict(type='str', choices=['GSSAPI', 'PLAIN', 'SCRAM-SHA-256', \
+                'SCRAM-SHA-512', 'OAUTHBEARER']),
+        sasl_password=dict(type='str'),
+        sasl_username=dict(type='str'),
+        security_protocol=dict(type='str', choices=['plaintext', 'ssl']),
+        ca_location=dict(type='str')
     )
 
     result = dict(
-        changed = False,
-        name = '',
-        state = ''
+        changed=False,
+        name='',
+        state=''
     )
 
     module = AnsibleModule(
@@ -824,24 +828,24 @@ def main():
     # Child-Parameter like sasl_username are left out aswell because
     # they get validated through their parent-param like sasl_mechanism
     params_valid_dict = dict(
-        name = validate_name,
-        partitions = validate_factor,
-        replication_factor = validate_factor,
-        bootstrap_server = validate_broker,
-        delete_retention_ms = validate_delete_retention_ms,
-        file_delete_delay_ms = validate_file_delete_delay_ms,
-        flush_ms = validate_flush_ms,
-        message_timestamp_difference_max_ms = validate_message_timestamp_difference_max_ms,
-        min_compaction_lag_ms = validate_min_compaction_lag_ms,
-        retention_ms = validate_retention_ms,
-        segment_jitter_ms = validate_segment_jitter_ms,
-        segment_ms = validate_segment_ms,
-        sasl_mechanism = validate_sasl_mechanism
+        name=validate_name,
+        partitions=validate_factor,
+        replication_factor=validate_factor,
+        bootstrap_server=validate_broker,
+        delete_retention_ms=validate_delete_retention_ms,
+        file_delete_delay_ms=validate_file_delete_delay_ms,
+        flush_ms=validate_flush_ms,
+        message_timestamp_difference_max_ms=validate_message_timestamp_difference_max_ms,
+        min_compaction_lag_ms=validate_min_compaction_lag_ms,
+        retention_ms=validate_retention_ms,
+        segment_jitter_ms=validate_segment_jitter_ms,
+        segment_ms=validate_segment_ms,
+        sasl_mechanism=validate_sasl_mechanism
     )
 
     # loop through params_valid_dict and validate all params which are set (not none)
     # validate all parameters
-    for key in params_valid_dict.keys():
+    for key in params_valid_dict:
         if module.params[key] is not None:
             # params_valid_dict[key] returns valid-func.
             # Pass as param for the valid-func the user-set param with module.params[key]
@@ -862,7 +866,8 @@ def main():
     # if topic exists and should stay so, compare configuration and modify them if needed
     if topic_exists and (module.params['state'] == "present"):
         result['state'] = "present"
-        mod_part = compare_part_rep(module.params['name'], module.params['partitions'], module.params['replication_factor'])
+        mod_part = compare_part_rep(module.params['name'], module.params['partitions'], \
+                module.params['replication_factor'])
         if mod_part:
             modify_part(module.params['name'], module.params['partitions'])
             result['changed'] = True
@@ -881,7 +886,8 @@ def main():
     # if topic does not exist, but should, create and configure
     if not topic_exists and (module.params['state'] == "present"):
         new_conf = add_config_together(module)
-        create_topic(module.params['name'], module.params['partitions'], module.params['replication_factor'], new_conf)
+        create_topic(module.params['name'], module.params['partitions'], \
+                module.params['replication_factor'], new_conf)
         result['changed'] = True
         result['state'] = "present"
 
