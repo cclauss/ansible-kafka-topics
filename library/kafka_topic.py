@@ -271,7 +271,7 @@ import pdb
 
 def check_topic(topic):
     # type: (str) -> bool
-    """check if topic exists
+    """Check if topic exists.
 
     Keyword arguments:
     topic -- topicname
@@ -284,12 +284,18 @@ def check_topic(topic):
     return True
 
 
-# compare the defined partitions and replication-factor in the playbook with the actually set
-# param: topic = topicname, type: str
-# param: partitions, type: int
-# param: replication_factor, type: int
-# return: True if change is needed, False if no change needed, type: bool
 def compare_part_rep(topic, partitions, replication_factor):
+    # type: (str, int, int) -> bool
+    """Compare partitions and replication-factor in the playbook with the ones actually set.
+
+    Keyword arguments:
+    topic -- topicname
+    partitions -- number of partitions
+    replication_factor -- number of replications
+
+    Return:
+    bool -- True if change is needed, else False
+    """
     metadata = admin.list_topics()                                    #type(metadata.topics) = dict
     old_part = len(metadata.topics[topic].partitions)                 #access partitions of topic over .partitions-func
     old_rep = len(metadata.topics[topic].partitions[0].replicas)      #type(partitions) = dict, access replicas with partition-id as key over .replicas-func
@@ -311,11 +317,17 @@ def compare_part_rep(topic, partitions, replication_factor):
     return True
 
 
-# compare the defined config in the playbook with the one set at the moment for this topic
-# param: topic = topicname, type: str
-# param: new_config = dictionary with new config and values, type: dict
-# return: True if change is needed, False if no change is needed, type: bool
 def compare_config(topic, new_config):
+    # type: (str, dict) -> bool
+    """Compare the defined config in the playbook with the one set at the moment for this topic.
+
+    Keyword arguments:
+    topic -- topicname
+    new_config -- dictionary with new config and values
+
+    Return:
+    bool -- True if change is needed, else False
+    """
     resource = [ConfigResource("TOPIC", topic)]
     des = admin.describe_configs(resource)
 
@@ -323,19 +335,21 @@ def compare_config(topic, new_config):
     old_conf = y[0].result()
 
     #iterate trough new-config-dict and compare with old-config-dict, using config as key
-    for config, newvalue in new_config.items():       
+    for config, newvalue in new_config.items():
         if str(newvalue) != old_conf[config].value:
             return True
 
     return False
 
 
-
-# modify config
-# param: topic = topicname, type: str
-# param: new_config = dictionary with new config and values, type: dict
-# return: no return
 def modify_config(topic, new_config):
+    # type: (str, dict)
+    """Modify topic-config.
+
+    Keyword arguments:
+    topic -- topicname
+    new_config -- dictionary with new config
+    """
     resource = [ConfigResource("TOPIC", topic)]
     des = admin.describe_configs(resource)
 
@@ -356,11 +370,14 @@ def modify_config(topic, new_config):
         fail_module(msg)
 
 
-# modify partition
-# param: topic = topicname, type: str
-# param: new_part = int representing new number of partitions
-# return: no return
 def modify_part(topic, new_part):
+    # type: (str, int)
+    """Modify topic-partition.
+
+    Keyword arguments:
+    topic -- topicname
+    new_part -- new number of partitions
+    """
     new_parts = [NewPartitions(topic, new_part)]
 
     try:
@@ -374,13 +391,16 @@ def modify_part(topic, new_part):
         fail_module(msg)
 
 
-# create a new topic, setting partition and replication-factor right now
-# param: topic = topicname, type: str
-# param: partitions = number of partitions, type: int
-# param: replication_factor = number of replicatons, which is from then on immutable, type: int
-# param: new_conf = configuration-dict for topic, for example containing retention-time, type: dict
-# return: no return
 def create_topic(topic, partitions, replication_factor, new_conf):
+    # type: (str, int, int, dict)
+    """Create a new topic, setting partition and replication-factor immediately.
+
+    Keyword arguments:
+    topic -- topicname
+    partitions -- number of partitions
+    replication_factor -- number of replications, which is once set immutable
+    new_conf -- dictionary with topic-config, for example containing retention.ms
+    """
     topic = [NewTopic(topic, num_partitions=partitions, replication_factor=replication_factor, config=new_conf)]
 
     try:
@@ -394,10 +414,13 @@ def create_topic(topic, partitions, replication_factor, new_conf):
         fail_module(msg)
 
 
-# delete topic, this func only needs the topicname
-# param: topic = topicname, type: str
-# return: no return
 def delete_topic(topic):
+    # type: (str)
+    """Delete the specified Topic.
+
+    Keyword arguments:
+    topic -- topicname
+    """
     topic = [topic]
 
     try:
@@ -686,7 +709,7 @@ def validate_port(port):
               )
         fail_module(msg)
     if (port <= 1024) or (port > 65535):
-        msg = ("Valid Port-Range is: 1-65535." \
+        msg = ("Valid Port-Range is: 1024-65534." \
               " But given Port is: %s" \
               %(port)
               )
