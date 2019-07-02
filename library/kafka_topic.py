@@ -271,7 +271,7 @@ import pdb
 
 def check_topic(topic):
     # type: (str) -> bool
-    """check if topic exists
+    """Check if topic exists.
 
     Keyword arguments:
     topic -- topicname
@@ -284,12 +284,18 @@ def check_topic(topic):
     return True
 
 
-# compare the defined partitions and replication-factor in the playbook with the actually set
-# param: topic = topicname, type: str
-# param: partitions, type: int
-# param: replication_factor, type: int
-# return: True if change is needed, False if no change needed, type: bool
 def compare_part_rep(topic, partitions, replication_factor):
+    # type: (str, int, int) -> bool
+    """Compare partitions and replication-factor in the playbook with the ones actually set.
+
+    Keyword arguments:
+    topic -- topicname
+    partitions -- number of partitions
+    replication_factor -- number of replications
+
+    Return:
+    bool -- True if change is needed, else False
+    """
     metadata = admin.list_topics()                                    #type(metadata.topics) = dict
     old_part = len(metadata.topics[topic].partitions)                 #access partitions of topic over .partitions-func
     old_rep = len(metadata.topics[topic].partitions[0].replicas)      #type(partitions) = dict, access replicas with partition-id as key over .replicas-func
@@ -311,11 +317,17 @@ def compare_part_rep(topic, partitions, replication_factor):
     return True
 
 
-# compare the defined config in the playbook with the one set at the moment for this topic
-# param: topic = topicname, type: str
-# param: new_config = dictionary with new config and values, type: dict
-# return: True if change is needed, False if no change is needed, type: bool
 def compare_config(topic, new_config):
+    # type: (str, dict) -> bool
+    """Compare the defined config in the playbook with the one set at the moment for this topic.
+
+    Keyword arguments:
+    topic -- topicname
+    new_config -- dictionary with new config and values
+
+    Return:
+    bool -- True if change is needed, else False
+    """
     resource = [ConfigResource("TOPIC", topic)]
     des = admin.describe_configs(resource)
 
@@ -323,19 +335,21 @@ def compare_config(topic, new_config):
     old_conf = y[0].result()
 
     #iterate trough new-config-dict and compare with old-config-dict, using config as key
-    for config, newvalue in new_config.items():       
+    for config, newvalue in new_config.items():
         if str(newvalue) != old_conf[config].value:
             return True
 
     return False
 
 
-
-# modify config
-# param: topic = topicname, type: str
-# param: new_config = dictionary with new config and values, type: dict
-# return: no return
 def modify_config(topic, new_config):
+    # type: (str, dict)
+    """Modify topic-config.
+
+    Keyword arguments:
+    topic -- topicname
+    new_config -- dictionary with new config
+    """
     resource = [ConfigResource("TOPIC", topic)]
     des = admin.describe_configs(resource)
 
@@ -356,11 +370,14 @@ def modify_config(topic, new_config):
         fail_module(msg)
 
 
-# modify partition
-# param: topic = topicname, type: str
-# param: new_part = int representing new number of partitions
-# return: no return
 def modify_part(topic, new_part):
+    # type: (str, int)
+    """Modify topic-partition.
+
+    Keyword arguments:
+    topic -- topicname
+    new_part -- new number of partitions
+    """
     new_parts = [NewPartitions(topic, new_part)]
 
     try:
@@ -374,13 +391,16 @@ def modify_part(topic, new_part):
         fail_module(msg)
 
 
-# create a new topic, setting partition and replication-factor right now
-# param: topic = topicname, type: str
-# param: partitions = number of partitions, type: int
-# param: replication_factor = number of replicatons, which is from then on immutable, type: int
-# param: new_conf = configuration-dict for topic, for example containing retention-time, type: dict
-# return: no return
 def create_topic(topic, partitions, replication_factor, new_conf):
+    # type: (str, int, int, dict)
+    """Create a new topic, setting partition and replication-factor immediately.
+
+    Keyword arguments:
+    topic -- topicname
+    partitions -- number of partitions
+    replication_factor -- number of replications, which is once set immutable
+    new_conf -- dictionary with topic-config, for example containing retention.ms
+    """
     topic = [NewTopic(topic, num_partitions=partitions, replication_factor=replication_factor, config=new_conf)]
 
     try:
@@ -394,10 +414,13 @@ def create_topic(topic, partitions, replication_factor, new_conf):
         fail_module(msg)
 
 
-# delete topic, this func only needs the topicname
-# param: topic = topicname, type: str
-# return: no return
 def delete_topic(topic):
+    # type: (str)
+    """Delete the specified topic.
+
+    Keyword arguments:
+    topic -- topicname
+    """
     topic = [topic]
 
     try:
@@ -418,10 +441,13 @@ def delete_topic(topic):
 #                                        #
 ##########################################
 
-# validate name for topic
-# param: name = topicname, type: str
-# no return
 def validate_name(name):
+    # type: (str)
+    """Validate name for topic.
+
+    Keyword arguments:
+    topic -- topicname
+    """
     max_length = 249
     #regex for checking if topicname matches topic-name-grammar set from the ISVC-Project
     rema = re.match(r"^([a-z][a-z\d-]+(\.[a-z][a-z\d-]+)*|app\.[a-z]{2,})(\.[A-Z][A-Za-z\d]+(\.v[1-9][0-9]*)?)?(-(state|command|event)(\.state|\.command|\.event)*)?(-[a-z][a-z0-9]*)?(-from\.(test|int|prod))?$", name)
@@ -436,11 +462,13 @@ def validate_name(name):
               )
         fail_module(msg)
 
-# validate partition-number and replication-number
-# param: factor = number for partitions or replication, type:int
-# param: part_or_rep = which gets validated for error-message if needed, type: str
-# no return
 def validate_factor(factor):
+    # type: (int)
+    """Validate partition-number and replication-number.
+
+    Keyword arguments:
+    factor -- quantity of partitions or replications
+    """
     if factor <= 0 or type(factor) != int:
         msg = ("Value must be a positive int." \
               " You tried to set %s as factor." \
@@ -454,10 +482,16 @@ def validate_factor(factor):
 #                                        #
 ##########################################
 
-# add different configs together in one dictionary for passing to compare-config and modify-config
-# param: module = AnsibleModule, containing the possible configs
-# return: new_config = dictionary containing all set configs, type: dict
 def add_config_together(module):
+    """Add different topic-configurations together in one dictionary.
+    If a topic-config isn't specified, the default-value is set.
+
+    Keyword arguments:
+    module -- This Ansiblemodule-object, containing the user-arguments
+
+    Return:
+    new_config -- dictionary containing complete topic-configuration
+    """
     #default-configuration
     default_configs = {
         "cleanup.policy":"delete",
@@ -515,7 +549,7 @@ def add_config_together(module):
         "message.downconversion.enable":module.params["message_downconversion_enable"]
     }
 
-    # because java-bools are all lowercase, lower these bools for comparing
+    # because java-bools are all lowercase and get returned as string, lower these bools for comparing
     if configs['preallocate'] is not None:
         configs['preallocate'] = str(configs['preallocate']).lower()
 
@@ -533,53 +567,94 @@ def add_config_together(module):
             new_conf[conf] = default_configs[conf]
     return new_conf
 
-# validate delete_retention_ms and convert to ms
 def validate_delete_retention_ms(delete_retention_ms):
-    # type: str, pattern: %d%h%m%s%ms
+    # type: (str)
+    """Validate delete_retention_ms and convert to ms.
+
+    Keyword arguments:
+    delete_retention_ms -- user configured delete-retention-ms, pattern: %d%h%m%s%ms
+    """
     convert_time_ms(delete_retention_ms, "delete_retention_ms")
 
-# validate file_delete_delay_ms and convert to ms
 def validate_file_delete_delay_ms(file_delete_delay_ms):
-    # type: str,  pattern: %d%h%m%s%ms
+    # type: (str)
+    """Validate file_delete_delay_ms and convert to ms.
+
+    Keyword arguments:
+    file_delete_delay_ms -- user configured file-delete-delay-ms, pattern: %d%h%m%s%ms
+    """
     convert_time_ms(file_delete_delay_ms, "file_delete_delay_ms")
 
-# validate flush_ms and convert to ms
 def validate_flush_ms(flush_ms):
-    # type: str,  pattern: %d%h%m%s%ms
+    # type: (str)
+    """Validate flush_ms and convert to ms.
+
+    Keyword arguments:
+    flush_ms -- user configured flush-ms, pattern: %d%h%m%s%ms
+    """
     convert_time_ms(flush_ms, "flush_ms")
 
-# validate message_timestamp_difference_max_ms and convert to ms
 def validate_message_timestamp_difference_max_ms(message_timestamp_difference_max_ms):
-    # type: str,  pattern: %d%h%m%s%ms
+    # type: (str)
+    """Validate message_timestamp_difference_max_ms and convert to ms.
+
+    Keyword arguments:
+    message_timestamp_difference_max_ms -- user configured message-timestamp-difference-max-ms, pattern: %d%h%m%s%ms
+    """
     convert_time_ms(message_timestamp_difference_max_ms, "message_timestamp_difference_max_ms")
 
-# validate min_compaction_lag_ms and convert to ms
 def validate_min_compaction_lag_ms(min_compaction_lag_ms):
-    # type: str,  pattern: %d%h%m%s%ms
+    # type: (str)
+    """Validate min_compaction_lag_ms and convert to ms.
+
+    Keyword arguments:
+    min_compaction_lag_ms -- user configured min-compaction-lag-ms, pattern: %d%h%m%s%ms
+    """
     convert_time_ms(min_compaction_lag_ms, "min_compaction_lag_ms")
 
-# validate retention time and convert to ms
 def validate_retention_ms(retention_ms):
-    # type: str,  pattern: %d%h%m%s%ms
+    # type: (str) -> str
+    """Validate retention_ms. If -1, return string, else convert to ms.
+
+    Keyword arguments:
+    retention_ms -- user configured retention-ms, pattern: %d%h%m%s%ms
+
+    Return:
+    retention_ms -- If set to "-1", return it
+    """
     if retention_ms == "-1":     #sets retention-time to unlimited
         return retention_ms
     convert_time_ms(retention_ms, "retention_ms")
 
-# validate segment_jitter_ms and convert to ms
 def validate_segment_jitter_ms(segment_jitter_ms):
-    # type: str,  pattern: %d%h%m%s%ms
+    # type: (str)
+    """Validate segment_jitter_ms and convert to ms.
+
+    Keyword arguments:
+    segment_jitter_ms -- user configured segment-jitter-ms, pattern: %d%h%m%s%ms
+    """
     convert_time_ms(segment_jitter_ms, "segment_jitter_ms")
 
-# validate segment_ms and convert to ms
 def validate_segment_ms(segment_ms):
-    # type: str,  pattern: %d%h%m%s%ms
+    # type: (str)
+    """Validate segment_ms and convert to ms.
+
+    Keyword arguments:
+    segment_ms -- user configured segment-ms, pattern: %d%h%m%s%ms
+    """
     convert_time_ms(segment_ms, "segment_ms")
 
-# convert user-given time to ms
-# param: time_ms = user-given time, config_type = for setting config and error-msg
 def convert_time_ms(time_ms,config_type):
+    #TODO: Make this mess beautifull pls
+    # type: (str,str)
+    """Convert user-given time to ms.
+
+    Keyword arguments:
+    time_ms -- user-given time as string
+    config_type -- for setting config and error-msg
+    """
     #try to parse retention_ms with regex into groups, split by timetype
-    rema = re.match( r"(?P<days>\d+d)?(?P<hours>\d+h)?(?P<minutes>\d+m)?(?P<seconds>\d+s)?(?P<miliseconds>\d+m)?", time_ms)
+    rema = re.match( r"^(?P<days>\d+d)?(?P<hours>\d+h)?(?P<minutes>\d+m)?(?P<seconds>\d+s)?(?P<miliseconds>\d+ms)?$", time_ms)
 
     t = rema.span()
     if t[1] == 0:
@@ -594,6 +669,9 @@ def convert_time_ms(time_ms,config_type):
     minutes = rema.group("minutes")
     seconds = rema.group("seconds")
     miliseconds = rema.group("miliseconds")
+
+    if miliseconds is not None:
+        miliseconds = miliseconds[:-1]
 
     timetype = [days, hours, minutes, seconds, miliseconds]
     multiplier = [86400000, 3600000, 60000, 1000, 1]
@@ -616,9 +694,14 @@ def convert_time_ms(time_ms,config_type):
 
     module.params[config_type] = ms_total
 
-# convert user-given storage size into bytes
-# param: storage, config_type: for setting converted storage
 def convert_storage_bytes(storage, config_type):
+    # type: (str,str)
+    """Convert user-given size into bytes.
+
+    Keyword arguments:
+    storage -- user-given storage-size as string
+    config_type -- for setting config and error-msg
+    """
     pass
 
 
@@ -632,6 +715,13 @@ def convert_storage_bytes(storage, config_type):
 # param: broker_definition, type:list, pattern per broker: 'host:port'
 # sets broker-list as a string for admin-conf: 'host:port,host:port'
 def validate_broker(broker_definition):
+    # type: (list)
+    """Validate broker-definition.
+    Set broker-list as a string for admin-conf: 'host:port,host:port'.
+
+    Keyword arguments:
+    broker_definition -- list containing broker. Pattern per broker: 'host:port'.
+    """
     broker_def_list = []
     for broker in broker_definition:
         broker_parts = broker.split(":")
@@ -654,10 +744,16 @@ def validate_broker(broker_definition):
     final_broker_definition = ",".join(broker_def_list)
     module.params['bootstrap_server'] = final_broker_definition
 
-# validate ipv4-address, trying to build a tcp-connection to given address
-# param: broker = one broker-definition, type: list, pattern: [host,port]
-# return: broker, type: str, pattern: 'host:port'
 def validate_ipv4(broker):
+    # type: (list) -> str
+    """Validate ipv4-address, trying to build a tcp-connection to given address.
+
+    Keyword arguments:
+    broker -- definition of one broker, as a list: [host,port]
+
+    Return:
+    broker -- valid broker as string: 'host:port'
+    """
     port = validate_port(broker[1])
     ip = broker[0]
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -674,10 +770,16 @@ def validate_ipv4(broker):
         fail_module(msg)
     return str(ip)+":"+str(port)
 
-# validate port
-# param: port, type: str
-# return: port, type: int
 def validate_port(port):
+    # type: (str) -> int
+    """Validate port.
+
+    Keyword arguments:
+    port -- port for tcp-connection to broker.
+
+    Return:
+    port -- port for tcp-connection to broker.
+    """
     try:
         port = int(port)
     except ValueError:
@@ -686,16 +788,20 @@ def validate_port(port):
               )
         fail_module(msg)
     if (port <= 1024) or (port > 65535):
-        msg = ("Valid Port-Range is: 1-65535." \
+        msg = ("Valid Port-Range is: 1024-65534." \
               " But given Port is: %s" \
               %(port)
               )
         fail_module(msg)
     return port
 
-# validate sasl-mechanism
-# param: sasl_mechanism = user-defined param
 def validate_sasl_mechanism(sasl_mechanism):
+    # type: (str)
+    """Validate sasl-mechanism.
+
+    Keyword arguments:
+    sasl_mechanism -- user-defined sasl_mechanism
+    """
     if sasl_mechanism == "PLAIN":
         validate_sasl_PLAIN()
     if sasl_mechanism == "GSSAPI":
@@ -713,10 +819,13 @@ def validate_sasl_mechanism(sasl_mechanism):
               )
         fail_module(msg)
 
-# validate sasl-mechanism PLAIN, check if username, password and protocol is set
-# also check if ca-location is set
-# set each value in admin_conf
 def validate_sasl_PLAIN():
+    # type: ()
+    """Validate sasl-mechanism PLAIN, check if mandatory username, password and protocol is set.
+    Also check if ca-location is set.
+    Set each value in admin_conf.
+    """
+
     if module.params['sasl_username'] is None \
     or module.params['sasl_password'] is None \
     or module.params['security_protocol'] is None:
@@ -744,6 +853,12 @@ def validate_sasl_PLAIN():
 ##########################################
 
 def fail_module(msg):
+    # type: (str)
+    """Fail module properly with error-message.
+
+    Keyword arguments:
+    msg -- error-message to print
+    """
     module.fail_json(msg=msg, **result)
 
 
