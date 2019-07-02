@@ -416,7 +416,7 @@ def create_topic(topic, partitions, replication_factor, new_conf):
 
 def delete_topic(topic):
     # type: (str)
-    """Delete the specified Topic.
+    """Delete the specified topic.
 
     Keyword arguments:
     topic -- topicname
@@ -441,10 +441,13 @@ def delete_topic(topic):
 #                                        #
 ##########################################
 
-# validate name for topic
-# param: name = topicname, type: str
-# no return
 def validate_name(name):
+    # type: (str)
+    """Validate name for topic.
+
+    Keyword arguments:
+    topic -- topicname
+    """
     max_length = 249
     #regex for checking if topicname matches topic-name-grammar set from the ISVC-Project
     rema = re.match(r"^([a-z][a-z\d-]+(\.[a-z][a-z\d-]+)*|app\.[a-z]{2,})(\.[A-Z][A-Za-z\d]+(\.v[1-9][0-9]*)?)?(-(state|command|event)(\.state|\.command|\.event)*)?(-[a-z][a-z0-9]*)?(-from\.(test|int|prod))?$", name)
@@ -459,11 +462,13 @@ def validate_name(name):
               )
         fail_module(msg)
 
-# validate partition-number and replication-number
-# param: factor = number for partitions or replication, type:int
-# param: part_or_rep = which gets validated for error-message if needed, type: str
-# no return
 def validate_factor(factor):
+    # type: (int)
+    """Validate partition-number and replication-number.
+
+    Keyword arguments:
+    factor -- quantity of partitions or replications
+    """
     if factor <= 0 or type(factor) != int:
         msg = ("Value must be a positive int." \
               " You tried to set %s as factor." \
@@ -477,10 +482,16 @@ def validate_factor(factor):
 #                                        #
 ##########################################
 
-# add different configs together in one dictionary for passing to compare-config and modify-config
-# param: module = AnsibleModule, containing the possible configs
-# return: new_config = dictionary containing all set configs, type: dict
 def add_config_together(module):
+    """Add different topic-configurations together in one dictionary.
+    If a topic-config isn't specified, the default-value is set.
+
+    Keyword arguments:
+    module -- This Ansiblemodule-object, containing the user-arguments
+
+    Return:
+    new_config -- dictionary containing complete topic-configuration
+    """
     #default-configuration
     default_configs = {
         "cleanup.policy":"delete",
@@ -538,7 +549,7 @@ def add_config_together(module):
         "message.downconversion.enable":module.params["message_downconversion_enable"]
     }
 
-    # because java-bools are all lowercase, lower these bools for comparing
+    # because java-bools are all lowercase and get returned as string, lower these bools for comparing
     if configs['preallocate'] is not None:
         configs['preallocate'] = str(configs['preallocate']).lower()
 
