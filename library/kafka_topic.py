@@ -567,46 +567,81 @@ def add_config_together(module):
             new_conf[conf] = default_configs[conf]
     return new_conf
 
-# validate delete_retention_ms and convert to ms
 def validate_delete_retention_ms(delete_retention_ms):
-    # type: str, pattern: %d%h%m%s%ms
+    # type: (str)
+    """Validate delete_retention_ms and convert to ms.
+
+    Keyword arguments:
+    delete_retention_ms -- user configured delete-retention-ms, pattern: %d%h%m%s%ms
+    """
     convert_time_ms(delete_retention_ms, "delete_retention_ms")
 
-# validate file_delete_delay_ms and convert to ms
 def validate_file_delete_delay_ms(file_delete_delay_ms):
-    # type: str,  pattern: %d%h%m%s%ms
+    # type: (str)
+    """Validate file_delete_delay_ms and convert to ms.
+
+    Keyword arguments:
+    file_delete_delay_ms -- user configured file-delete-delay-ms, pattern: %d%h%m%s%ms
+    """
     convert_time_ms(file_delete_delay_ms, "file_delete_delay_ms")
 
-# validate flush_ms and convert to ms
 def validate_flush_ms(flush_ms):
-    # type: str,  pattern: %d%h%m%s%ms
+    # type: (str)
+    """Validate flush_ms and convert to ms.
+
+    Keyword arguments:
+    flush_ms -- user configured flush-ms, pattern: %d%h%m%s%ms
+    """
     convert_time_ms(flush_ms, "flush_ms")
 
-# validate message_timestamp_difference_max_ms and convert to ms
 def validate_message_timestamp_difference_max_ms(message_timestamp_difference_max_ms):
-    # type: str,  pattern: %d%h%m%s%ms
+    # type: (str)
+    """Validate message_timestamp_difference_max_ms and convert to ms.
+
+    Keyword arguments:
+    message_timestamp_difference_max_ms -- user configured message-timestamp-difference-max-ms, pattern: %d%h%m%s%ms
+    """
     convert_time_ms(message_timestamp_difference_max_ms, "message_timestamp_difference_max_ms")
 
-# validate min_compaction_lag_ms and convert to ms
 def validate_min_compaction_lag_ms(min_compaction_lag_ms):
-    # type: str,  pattern: %d%h%m%s%ms
+    # type: (str)
+    """Validate min_compaction_lag_ms and convert to ms.
+
+    Keyword arguments:
+    min_compaction_lag_ms -- user configured min-compaction-lag-ms, pattern: %d%h%m%s%ms
+    """
     convert_time_ms(min_compaction_lag_ms, "min_compaction_lag_ms")
 
-# validate retention time and convert to ms
 def validate_retention_ms(retention_ms):
-    # type: str,  pattern: %d%h%m%s%ms
+    # type: (str) -> str
+    """Validate retention_ms. If -1, return string, else convert to ms.
+
+    Keyword arguments:
+    retention_ms -- user configured retention-ms, pattern: %d%h%m%s%ms
+
+    Return:
+    retention_ms -- If set to "-1", return it
+    """
     if retention_ms == "-1":     #sets retention-time to unlimited
         return retention_ms
     convert_time_ms(retention_ms, "retention_ms")
 
-# validate segment_jitter_ms and convert to ms
 def validate_segment_jitter_ms(segment_jitter_ms):
-    # type: str,  pattern: %d%h%m%s%ms
+    # type: (str)
+    """Validate segment_jitter_ms and convert to ms.
+
+    Keyword arguments:
+    segment_jitter_ms -- user configured segment-jitter-ms, pattern: %d%h%m%s%ms
+    """
     convert_time_ms(segment_jitter_ms, "segment_jitter_ms")
 
-# validate segment_ms and convert to ms
 def validate_segment_ms(segment_ms):
-    # type: str,  pattern: %d%h%m%s%ms
+    # type: (str)
+    """Validate segment_ms and convert to ms.
+
+    Keyword arguments:
+    segment_ms -- user configured segment-ms, pattern: %d%h%m%s%ms
+    """
     convert_time_ms(segment_ms, "segment_ms")
 
 # convert user-given time to ms
