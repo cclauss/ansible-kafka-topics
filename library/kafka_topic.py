@@ -645,6 +645,7 @@ def validate_segment_ms(segment_ms):
     convert_time_ms(segment_ms, "segment_ms")
 
 def convert_time_ms(time_ms,config_type):
+    #TODO: Make this mess beautifull pls
     # type: (str,str)
     """Convert user-given time to ms.
 
@@ -693,9 +694,14 @@ def convert_time_ms(time_ms,config_type):
 
     module.params[config_type] = ms_total
 
-# convert user-given storage size into bytes
-# param: storage, config_type: for setting converted storage
 def convert_storage_bytes(storage, config_type):
+    # type: (str,str)
+    """Convert user-given size into bytes.
+
+    Keyword arguments:
+    storage -- user-given storage-size as string
+    config_type -- for setting config and error-msg
+    """
     pass
 
 
@@ -709,6 +715,13 @@ def convert_storage_bytes(storage, config_type):
 # param: broker_definition, type:list, pattern per broker: 'host:port'
 # sets broker-list as a string for admin-conf: 'host:port,host:port'
 def validate_broker(broker_definition):
+    # type: (list)
+    """Validate broker-definition.
+    Set broker-list as a string for admin-conf: 'host:port,host:port'.
+
+    Keyword arguments:
+    broker_definition -- list containing broker. Pattern per broker: 'host:port'.
+    """
     broker_def_list = []
     for broker in broker_definition:
         broker_parts = broker.split(":")
@@ -731,10 +744,16 @@ def validate_broker(broker_definition):
     final_broker_definition = ",".join(broker_def_list)
     module.params['bootstrap_server'] = final_broker_definition
 
-# validate ipv4-address, trying to build a tcp-connection to given address
-# param: broker = one broker-definition, type: list, pattern: [host,port]
-# return: broker, type: str, pattern: 'host:port'
 def validate_ipv4(broker):
+    # type: (list) -> str
+    """Validate ipv4-address, trying to build a tcp-connection to given address.
+
+    Keyword arguments:
+    broker -- definition of one broker, as a list: [host,port]
+
+    Return:
+    broker -- valid broker as string: 'host:port'
+    """
     port = validate_port(broker[1])
     ip = broker[0]
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -751,10 +770,16 @@ def validate_ipv4(broker):
         fail_module(msg)
     return str(ip)+":"+str(port)
 
-# validate port
-# param: port, type: str
-# return: port, type: int
 def validate_port(port):
+    # type: (str) -> int
+    """Validate port.
+
+    Keyword arguments:
+    port -- port for tcp-connection to broker.
+
+    Return:
+    port -- port for tcp-connection to broker.
+    """
     try:
         port = int(port)
     except ValueError:
@@ -770,9 +795,13 @@ def validate_port(port):
         fail_module(msg)
     return port
 
-# validate sasl-mechanism
-# param: sasl_mechanism = user-defined param
 def validate_sasl_mechanism(sasl_mechanism):
+    # type: (str)
+    """Validate sasl-mechanism.
+
+    Keyword arguments:
+    sasl_mechanism -- user-defined sasl_mechanism
+    """
     if sasl_mechanism == "PLAIN":
         validate_sasl_PLAIN()
     if sasl_mechanism == "GSSAPI":
@@ -790,10 +819,13 @@ def validate_sasl_mechanism(sasl_mechanism):
               )
         fail_module(msg)
 
-# validate sasl-mechanism PLAIN, check if username, password and protocol is set
-# also check if ca-location is set
-# set each value in admin_conf
 def validate_sasl_PLAIN():
+    # type: ()
+    """Validate sasl-mechanism PLAIN, check if mandatory username, password and protocol is set.
+    Also check if ca-location is set.
+    Set each value in admin_conf.
+    """
+
     if module.params['sasl_username'] is None \
     or module.params['sasl_password'] is None \
     or module.params['security_protocol'] is None:
@@ -821,6 +853,12 @@ def validate_sasl_PLAIN():
 ##########################################
 
 def fail_module(msg):
+    # type: (str)
+    """Fail module properly with error-message.
+
+    Keyword arguments:
+    msg -- error-message to print
+    """
     module.fail_json(msg=msg, **result)
 
 
