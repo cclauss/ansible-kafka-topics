@@ -702,6 +702,17 @@ def convert_storage_bytes(storage, config_type):
     storage -- user-given storage-size as string
     config_type -- for setting config and error-msg
     """
+    # ^((?P<KiB>\d+KiB)|(?P<MiB>\d+MiB)|(?P<GiB>\d+GiB)|(?P<TiB>\d+TiB)|(?P<kB>\d+kB)|(?P<MB>\d+MB)|(?P<GB>\d+GB)|(?P<TB>\d+TB))?$
+    rema = re.match(r"^((?P<KiB>\d+KiB)|(?P<MiB>\d+MiB)|(?P<GiB>\d+GiB)|(?P<TiB>\d+TiB)|(?P<kB>\d+kB)|(?P<MB>\d+MB)|(?P<GB>\d+GB)|(?P<TB>\d+TB))?$", storage)
+
+    t = rema.span()
+    if t[1] == 0:
+        msg = ("Could not parse given %s: %s into bytes." \
+              " Please use one of the following units: KiB, MiB, GiB, TiB, kB, MB, GB, TB." \
+              %(config_type, time_ms)
+              )
+        fail_module(msg)
+    # ^\d+
     pass
 
 
