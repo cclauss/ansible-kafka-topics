@@ -644,11 +644,16 @@ def validate_segment_ms(segment_ms):
     """
     convert_time_ms(segment_ms, "segment_ms")
 
-# convert user-given time to ms
-# param: time_ms = user-given time, config_type = for setting config and error-msg
 def convert_time_ms(time_ms,config_type):
+    # type: (str,str)
+    """Convert user-given time to ms.
+
+    Keyword arguments:
+    time_ms -- user-given time as string
+    config_type -- for setting config and error-msg
+    """
     #try to parse retention_ms with regex into groups, split by timetype
-    rema = re.match( r"(?P<days>\d+d)?(?P<hours>\d+h)?(?P<minutes>\d+m)?(?P<seconds>\d+s)?(?P<miliseconds>\d+m)?", time_ms)
+    rema = re.match( r"^(?P<days>\d+d)?(?P<hours>\d+h)?(?P<minutes>\d+m)?(?P<seconds>\d+s)?(?P<miliseconds>\d+ms)?$", time_ms)
 
     t = rema.span()
     if t[1] == 0:
@@ -663,6 +668,9 @@ def convert_time_ms(time_ms,config_type):
     minutes = rema.group("minutes")
     seconds = rema.group("seconds")
     miliseconds = rema.group("miliseconds")
+
+    if miliseconds is not None:
+        miliseconds = miliseconds[:-1]
 
     timetype = [days, hours, minutes, seconds, miliseconds]
     multiplier = [86400000, 3600000, 60000, 1000, 1]
