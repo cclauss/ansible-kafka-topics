@@ -712,8 +712,24 @@ def convert_storage_bytes(storage, config_type):
               %(config_type, storage)
               )
         fail_module(msg)
-    # ^\d+
-    pass
+
+    #map storage to unit and multiplicator
+    unit_map = {
+        "KiB":[rema.group("KiB"),1024],
+        "MiB":[rema.group("MiB"),1048576],
+        "GiB":[rema.group("GiB"),1073741824],
+        "TiB":[rema.group("TiB"),1099511627776],
+        "kB":[rema.group("kB"),1000],
+        "MB":[rema.group("MB"),1000000],
+        "GB":[rema.group("GB"),1000000000],
+        "TB":[rema.group("TB"),1000000000000]
+    }
+
+    #find the one matched storage-unit, and convert to bytes
+    for unit, value in unit_map.items():
+        if value[0] is not None:
+            value[0] = re.match(r"^\d+",value[0]).group()
+            module.params[config_type] = int(value[0])*value[1]
 
 
 ##########################################
