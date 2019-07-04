@@ -709,7 +709,7 @@ def convert_storage_bytes(storage, config_type):
     if t[1] == 0:
         msg = ("Could not parse given %s: %s into bytes." \
               " Please use one of the following units: KiB, MiB, GiB, TiB, kB, MB, GB, TB." \
-              %(config_type, time_ms)
+              %(config_type, storage)
               )
         fail_module(msg)
     # ^\d+
