@@ -694,6 +694,53 @@ def convert_time_ms(time_ms,config_type):
 
     module.params[config_type] = ms_total
 
+
+
+def validate_index_interval_bytes(index_interval_bytes):
+    # type: (str)
+    """Validate index_interval_bytes and convert to bytes.
+
+    Keyword arguments:
+    index_interval_bytes -- user configured index-interval-bytes, units: KiB, MiB, GiB, TiB, kB, MB, GB, TB
+    """
+    convert_storage_bytes(index_interval_bytes, "index_interval_bytes")
+
+def validate_max_message_bytes(max_message_bytes):
+    # type: (str)
+    """Validate max_message_bytes and convert to bytes.
+
+    Keyword arguments:
+    max_message_bytes -- user configured max-message-bytes, units: KiB, MiB, GiB, TiB, kB, MB, GB, TB
+    """
+    convert_storage_bytes(max_message_bytes, "max_message_bytes")
+
+def validate_retention_bytes(retention_bytes):
+    # type: (str)
+    """Validate retention_bytes and convert to bytes.
+
+    Keyword arguments:
+    retention_bytes -- user configured retention_bytes, units: KiB, MiB, GiB, TiB, kB, MB, GB, TB
+    """
+    convert_storage_bytes(retention_bytes, "retention_bytes")
+
+def validate_segment_bytes(segment_bytes):
+    # type: (str)
+    """Validate segment_bytes and convert to bytes.
+
+    Keyword arguments:
+    segment_bytes -- user configured segment_bytes, units: KiB, MiB, GiB, TiB, kB, MB, GB, TB
+    """
+    convert_storage_bytes(segment_bytes, "segment_bytes")
+
+def validate_segment_index_bytes(segment_index_bytes):
+    # type: (str)
+    """Validate segment_index_bytes and convert to bytes.
+
+    Keyword arguments:
+    segment_index_bytes -- user configured segment_index_bytes, units: KiB, MiB, GiB, TiB, kB, MB, GB, TB
+    """
+    convert_storage_bytes(segment_index_bytes, "segment_index_bytes")
+
 def convert_storage_bytes(storage, config_type):
     # type: (str,str)
     """Convert user-given size into bytes.
