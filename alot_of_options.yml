@@ -18,8 +18,8 @@
         file_delete_delay_ms: 1h
         flush_messages: 50
         flush_ms: 3s
-        index_interval_bytes: 100
-        max_message_bytes: 150
+        index_interval_bytes: 100kB
+        max_message_bytes: 150MiB
         message_format_version: 2.1-IV0
         message_timestamp_difference_max_ms: 3m
         message_timestamp_type: LogAppendTime
@@ -27,10 +27,10 @@
         min_compaction_lag_ms: 10s
         min_insync_replicas: 1
         preallocate: true
-        retention_bytes: 200
+        retention_bytes: 200KiB
         retention_ms: 1ms
-        segment_bytes: 250
-        segment_index_bytes: 300
+        segment_bytes: 2GiB
+        segment_index_bytes: 3MB
         segment_jitter_ms: 3d
         segment_ms: 1d
         unclean_leader_election_enable: true
