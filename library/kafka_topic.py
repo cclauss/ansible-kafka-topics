@@ -686,7 +686,7 @@ def convert_time_ms(time_ms,config_type):
 
     if ms_total >= 2**63:
         msg = ("Your chosen %s is way too long." \
-              " Retention-time can not be over 2^63ms." \
+              " Retention-time can not be over 9'223'372'036'854'775'807 ms." \
               " You set %s as retention, which results in %s ms." \
               %(config_type, time_ms, ms_total)
               )
@@ -784,7 +784,7 @@ def convert_storage_bytes(storage, config_type):
     if config_type == "retention_bytes":
         if bytes_total >= 2**63:
             msg = ("Your chosen %s is way too long." \
-                  " It can not be over (2^63)-1 bytes." \
+                  " It can not be over 9'223'372'036'854'775'807 bytes." \
                   " You set %s as size, which results in %s bytes." \
                   %(config_type, storage, bytes_total)
                   )
@@ -799,7 +799,7 @@ def convert_storage_bytes(storage, config_type):
                 fail_module(msg)
         if bytes_total >= 2**32:
             msg = ("Your chosen %s is way too long." \
-                  " It can not be over (2^32)-1 bytes." \
+                  " It can not be over 4'294'967'295 bytes." \
                   " You set %s as size, which results in %s bytes." \
                   %(config_type, storage, bytes_total)
                   )
