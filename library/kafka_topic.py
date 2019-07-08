@@ -645,7 +645,6 @@ def validate_segment_ms(segment_ms):
     convert_time_ms(segment_ms, "segment_ms")
 
 def convert_time_ms(time_ms,config_type):
-    #TODO: Make this mess beautifull pls
     # type: (str,str)
     """Convert user-given time to ms.
 
@@ -664,30 +663,26 @@ def convert_time_ms(time_ms,config_type):
               )
         fail_module(msg)
 
-    days = rema.group("days")
-    hours = rema.group("hours")
-    minutes = rema.group("minutes")
-    seconds = rema.group("seconds")
-    miliseconds = rema.group("miliseconds")
+    unit_map = {
+        "days":[rema.group("days"),86400000],
+        "hours":[rema.group("hours"),3600000],
+        "minutes":[rema.group("minutes"),60000],
+        "seconds":[rema.group("seconds"),1000],
+        "miliseconds":[rema.group("miliseconds"),1]
+    }
 
-    if miliseconds is not None:
-        miliseconds = miliseconds[:-1]
-
-    timetype = [days, hours, minutes, seconds, miliseconds]
-    multiplier = [86400000, 3600000, 60000, 1000, 1]
     ms_total = 0
-    i = 0
 
-    for t_type in timetype:     #convert to ms and add together
-        if t_type is not None:
-            #[:-1] cuts of last char (which indicates timetype and is not an int)
-            ms_total = ms_total + (int(t_type[:-1])*multiplier[i])
-        i = i+1
+    for unit, value in unit_map.items():
+        if value[0] is not None:
+            # cut of char with regex, which indicates timetype and is not an int
+            value[0] = re.match(r"^\d+",value[0]).group()
+            ms_total = ms_total + int(value[0])*value[1]
 
     if ms_total >= 2**63:
         msg = ("Your chosen %s is way too long." \
-              " Retention-time can not be over 9'223'372'036'854'775'807 ms." \
-              " You set %s as retention, which results in %s ms." \
+              " It can not be over 9'223'372'036'854'775'807 ms." \
+              " You set %s as time, which results in %s ms." \
               %(config_type, time_ms, ms_total)
               )
         fail_module(msg)
