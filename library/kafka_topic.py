@@ -255,7 +255,7 @@ state:
 '''
 
 from ansible.module_utils.basic import AnsibleModule
-from confluent_kafka.admin import AdminClient, NewTopic, NewPartitions, ConfigResource
+from confluent_kafka.admin import AdminClient, NewTopic, NewPartitions, ConfigResource, KafkaException
 
 import re
 import socket
@@ -645,7 +645,6 @@ def validate_segment_ms(segment_ms):
     convert_time_ms(segment_ms, "segment_ms")
 
 def convert_time_ms(time_ms,config_type):
-    #TODO: Make this mess beautifull pls
     # type: (str,str)
     """Convert user-given time to ms.
 
@@ -664,39 +663,84 @@ def convert_time_ms(time_ms,config_type):
               )
         fail_module(msg)
 
-    days = rema.group("days")
-    hours = rema.group("hours")
-    minutes = rema.group("minutes")
-    seconds = rema.group("seconds")
-    miliseconds = rema.group("miliseconds")
+    unit_map = {
+        "days":[rema.group("days"),86400000],
+        "hours":[rema.group("hours"),3600000],
+        "minutes":[rema.group("minutes"),60000],
+        "seconds":[rema.group("seconds"),1000],
+        "miliseconds":[rema.group("miliseconds"),1]
+    }
 
-    if miliseconds is not None:
-        miliseconds = miliseconds[:-1]
-
-    timetype = [days, hours, minutes, seconds, miliseconds]
-    multiplier = [86400000, 3600000, 60000, 1000, 1]
     ms_total = 0
-    i = 0
 
-    for t_type in timetype:     #convert to ms and add together
-        if t_type is not None:
-            #[:-1] cuts of last char (which indicates timetype and is not an int)
-            ms_total = ms_total + (int(t_type[:-1])*multiplier[i])
-        i = i+1
+    for unit, value in unit_map.items():
+        if value[0] is not None:
+            # cut of char with regex, which indicates timetype and is not an int
+            value[0] = re.match(r"^\d+",value[0]).group()
+            ms_total = ms_total + int(value[0])*value[1]
 
     if ms_total >= 2**63:
         msg = ("Your chosen %s is way too long." \
-              " Retention-time can not be over 2^63ms." \
-              " You set %s as retention, which results in %s ms." \
+              " It can not be over 9'223'372'036'854'775'807 ms." \
+              " You set %s as time, which results in %s ms." \
               %(config_type, time_ms, ms_total)
               )
         fail_module(msg)
 
     module.params[config_type] = ms_total
 
+
+
+def validate_index_interval_bytes(index_interval_bytes):
+    # type: (str)
+    """Validate index_interval_bytes and convert to bytes.
+
+    Keyword arguments:
+    index_interval_bytes -- user configured index-interval-bytes, units: KiB, MiB, GiB, TiB, kB, MB, GB, TB
+    """
+    convert_storage_bytes(index_interval_bytes, "index_interval_bytes")
+
+def validate_max_message_bytes(max_message_bytes):
+    # type: (str)
+    """Validate max_message_bytes and convert to bytes.
+
+    Keyword arguments:
+    max_message_bytes -- user configured max-message-bytes, units: KiB, MiB, GiB, TiB, kB, MB, GB, TB
+    """
+    convert_storage_bytes(max_message_bytes, "max_message_bytes")
+
+def validate_retention_bytes(retention_bytes):
+    # type: (str)
+    """Validate retention_bytes and convert to bytes.
+
+    Keyword arguments:
+    retention_bytes -- user configured retention_bytes, units: KiB, MiB, GiB, TiB, kB, MB, GB, TB
+    """
+    if retention_bytes == "-1":     #sets retention-time to unlimited
+        return retention_bytes
+    convert_storage_bytes(retention_bytes, "retention_bytes")
+
+def validate_segment_bytes(segment_bytes):
+    # type: (str)
+    """Validate segment_bytes and convert to bytes.
+
+    Keyword arguments:
+    segment_bytes -- user configured segment_bytes, units: KiB, MiB, GiB, TiB, kB, MB, GB, TB
+    """
+    convert_storage_bytes(segment_bytes, "segment_bytes")
+
+def validate_segment_index_bytes(segment_index_bytes):
+    # type: (str)
+    """Validate segment_index_bytes and convert to bytes.
+
+    Keyword arguments:
+    segment_index_bytes -- user configured segment_index_bytes, units: KiB, MiB, GiB, TiB, kB, MB, GB, TB
+    """
+    convert_storage_bytes(segment_index_bytes, "segment_index_bytes")
+
 def convert_storage_bytes(storage, config_type):
     # type: (str,str)
-    """Convert user-given size into bytes.
+    """Convert user-given size into bytes and validate size depending on config-type.
 
     Keyword arguments:
     storage -- user-given storage-size as string
@@ -712,8 +756,50 @@ def convert_storage_bytes(storage, config_type):
               %(config_type, storage)
               )
         fail_module(msg)
-    # ^\d+
-    pass
+
+    #map storage to unit and multiplicator
+    unit_map = {
+        "KiB":[rema.group("KiB"),1024],
+        "MiB":[rema.group("MiB"),1048576],
+        "GiB":[rema.group("GiB"),1073741824],
+        "TiB":[rema.group("TiB"),1099511627776],
+        "kB":[rema.group("kB"),1000],
+        "MB":[rema.group("MB"),1000000],
+        "GB":[rema.group("GB"),1000000000],
+        "TB":[rema.group("TB"),1000000000000]
+    }
+
+    #find the one matched storage-unit, and convert to bytes
+    for unit, value in unit_map.items():
+        if value[0] is not None:
+            value[0] = re.match(r"^\d+",value[0]).group()
+            bytes_total = int(value[0])*value[1]
+
+    # check if total-bytes is in valid range depending on config-type
+    if config_type == "retention_bytes":
+        if bytes_total >= 2**63:
+            msg = ("Your chosen %s is way too long." \
+                  " It can not be over 9'223'372'036'854'775'807 bytes." \
+                  " You set %s as size, which results in %s bytes." \
+                  %(config_type, storage, bytes_total)
+                  )
+            fail_module(msg)
+    else:
+        if config_type == "segment_bytes":
+            if bytes_total < 14:
+                msg = ("Your chosen %s must be at least 14 bytes." \
+                      " You set %s as size, which results in %s bytes." \
+                      %(config_type, storage, bytes_total)
+                      )
+                fail_module(msg)
+        if bytes_total >= 2**32:
+            msg = ("Your chosen %s is way too long." \
+                  " It can not be over 4'294'967'295 bytes." \
+                  " You set %s as size, which results in %s bytes." \
+                  %(config_type, storage, bytes_total)
+                  )
+            fail_module(msg)
+    module.params[config_type] = bytes_total
 
 
 ##########################################
@@ -901,9 +987,9 @@ def main():
         flush_messages=dict(type='int'),
         flush_ms=dict(type='str'),
         follower_replication_throttled_replicas=dict(type='list'),
-        index_interval_bytes=dict(type='int'),
+        index_interval_bytes=dict(type='str'),
         leader_replication_throttled_replicas=dict(type='list'),
-        max_message_bytes=dict(type='int'),
+        max_message_bytes=dict(type='str'),
         message_format_version=dict(type='str', \
             choices=['0.8.0', '0.8.1', '0.8.2', '0.9.0', \
                     '0.10.0-IV0', '0.10.0-IV1', '0.10.1-IV0', \
@@ -917,10 +1003,10 @@ def main():
         min_compaction_lag_ms=dict(type='str'),
         min_insync_replicas=dict(type='int'),
         preallocate=dict(type='bool'),
-        retention_bytes=dict(type='int'),
+        retention_bytes=dict(type='str'),
         retention_ms=dict(type='str'),
-        segment_bytes=dict(type='int'),
-        segment_index_bytes=dict(type='int'),
+        segment_bytes=dict(type='str'),
+        segment_index_bytes=dict(type='str'),
         segment_jitter_ms=dict(type='str'),
         segment_ms=dict(type='str'),
         unclean_leader_election_enable=dict(type='bool'),
@@ -961,9 +1047,14 @@ def main():
         delete_retention_ms=validate_delete_retention_ms,
         file_delete_delay_ms=validate_file_delete_delay_ms,
         flush_ms=validate_flush_ms,
+        index_interval_bytes=validate_index_interval_bytes,
+        max_message_bytes=validate_max_message_bytes,
         message_timestamp_difference_max_ms=validate_message_timestamp_difference_max_ms,
         min_compaction_lag_ms=validate_min_compaction_lag_ms,
+        retention_bytes=validate_retention_bytes,
         retention_ms=validate_retention_ms,
+        segment_bytes=validate_segment_bytes,
+        segment_index_bytes=validate_segment_index_bytes,
         segment_jitter_ms=validate_segment_jitter_ms,
         segment_ms=validate_segment_ms,
         sasl_mechanism=validate_sasl_mechanism
