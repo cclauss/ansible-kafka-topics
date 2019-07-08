@@ -255,7 +255,7 @@ state:
 '''
 
 from ansible.module_utils.basic import AnsibleModule
-from confluent_kafka.admin import AdminClient, NewTopic, NewPartitions, ConfigResource
+from confluent_kafka.admin import AdminClient, NewTopic, NewPartitions, ConfigResource, KafkaException
 
 import re
 import socket
@@ -363,7 +363,7 @@ def modify_config(topic, new_config):
         des = admin.alter_configs(resource)             #alter topic with new config
         y = list(des.values())
         y[0].result()                        #use .result-func for finalizing
-    except Exception:
+    except KafkaException:
         msg = ("Failed to finalize config-change for topic %s" \
               %(topic)
               )
@@ -384,7 +384,7 @@ def modify_part(topic, new_part):
         fs = admin.create_partitions(new_parts, validate_only=False)
         y = list(fs.values())
         y[0].result()
-    except Exception:
+    except KafkaException:
         msg = ("Failed to finalize partition-change for topic %s" \
               %(topic)
               )
@@ -407,7 +407,7 @@ def create_topic(topic, partitions, replication_factor, new_conf):
         fs = admin.create_topics(topic)
         y = list(fs.values())
         y[0].result()
-    except Exception:
+    except KafkaException:
         msg = ("Failed to create topic %s." \
               %(topic)
               )
@@ -427,7 +427,7 @@ def delete_topic(topic):
         fs = admin.delete_topics(topic)
         y = list(fs.values())
         y[0].result()
-    except Exception:
+    except KafkaException:
         msg = ("Failed to delete topic %s." \
               %(topic)
               )
