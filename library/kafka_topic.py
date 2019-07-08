@@ -363,7 +363,7 @@ def modify_config(topic, new_config):
         des = admin.alter_configs(resource)             #alter topic with new config
         y = list(des.values())
         y[0].result()                        #use .result-func for finalizing
-    except KafkaException:
+    except Exception:
         msg = ("Failed to finalize config-change for topic %s" \
               %(topic)
               )
@@ -384,7 +384,7 @@ def modify_part(topic, new_part):
         fs = admin.create_partitions(new_parts, validate_only=False)
         y = list(fs.values())
         y[0].result()
-    except KafkaException:
+    except Exception:
         msg = ("Failed to finalize partition-change for topic %s" \
               %(topic)
               )
@@ -407,7 +407,7 @@ def create_topic(topic, partitions, replication_factor, new_conf):
         fs = admin.create_topics(topic)
         y = list(fs.values())
         y[0].result()
-    except KafkaException:
+    except Exception:
         msg = ("Failed to create topic %s." \
               %(topic)
               )
@@ -427,7 +427,7 @@ def delete_topic(topic):
         fs = admin.delete_topics(topic)
         y = list(fs.values())
         y[0].result()
-    except KafkaException:
+    except Exception:
         msg = ("Failed to delete topic %s." \
               %(topic)
               )
@@ -721,6 +721,8 @@ def validate_retention_bytes(retention_bytes):
     Keyword arguments:
     retention_bytes -- user configured retention_bytes, units: KiB, MiB, GiB, TiB, kB, MB, GB, TB
     """
+    if retention_bytes == "-1":     #sets retention-time to unlimited
+        return retention_bytes
     convert_storage_bytes(retention_bytes, "retention_bytes")
 
 def validate_segment_bytes(segment_bytes):
@@ -743,7 +745,7 @@ def validate_segment_index_bytes(segment_index_bytes):
 
 def convert_storage_bytes(storage, config_type):
     # type: (str,str)
-    """Convert user-given size into bytes.
+    """Convert user-given size into bytes and validate size depending on config-type.
 
     Keyword arguments:
     storage -- user-given storage-size as string
@@ -776,7 +778,33 @@ def convert_storage_bytes(storage, config_type):
     for unit, value in unit_map.items():
         if value[0] is not None:
             value[0] = re.match(r"^\d+",value[0]).group()
-            module.params[config_type] = int(value[0])*value[1]
+            bytes_total = int(value[0])*value[1]
+
+    # check if total-bytes is in valid range depending on config-type
+    if config_type == "retention_bytes":
+        if bytes_total >= 2**63:
+            msg = ("Your chosen %s is way too long." \
+                  " It can not be over (2^63)-1 bytes." \
+                  " You set %s as size, which results in %s bytes." \
+                  %(config_type, storage, bytes_total)
+                  )
+            fail_module(msg)
+    else:
+        if config_type == "segment_bytes":
+            if bytes_total < 14:
+                msg = ("Your chosen %s must be at least 14 bytes." \
+                      " You set %s as size, which results in %s bytes." \
+                      %(config_type, storage, bytes_total)
+                      )
+                fail_module(msg)
+        if bytes_total >= 2**32:
+            msg = ("Your chosen %s is way too long." \
+                  " It can not be over (2^32)-1 bytes." \
+                  " You set %s as size, which results in %s bytes." \
+                  %(config_type, storage, bytes_total)
+                  )
+            fail_module(msg)
+    module.params[config_type] = bytes_total
 
 
 ##########################################
