@@ -56,6 +56,7 @@ options:
     description:
       - Kafka-Broker which is a member of the Kafka-Cluster you want to create the topic on.
       - Use the following format: "host:port".
+      - Also supports now IPv6-definitions.
     required: true
     type: list
 
@@ -809,9 +810,6 @@ def convert_storage_bytes(storage, config_type):
 #                                        #
 ##########################################
 
-# validate broker-definition
-# param: broker_definition, type:list, pattern per broker: 'host:port'
-# sets broker-list as a string for admin-conf: 'host:port,host:port'
 def validate_broker(broker_definition):
     # type: (list)
     """Validate broker-definition.
@@ -824,14 +822,9 @@ def validate_broker(broker_definition):
     for broker in broker_definition:
         broker_parts = broker.split(":")
         if len(broker_parts) == 2:
-            broker = validate_ipv4(broker_parts)
+            validate_ipv4(broker_parts)
         if len(broker_parts) > 2:
-            msg = ("It seems you tried so set an IPv6-Address: %s" \
-                  " We do not support that so far - please set" \
-                  " an IPv4-Address." \
-                  %(broker)
-                  )
-            fail_module(msg)
+            validate_ipv6(broker)
         if len(broker_parts) < 2:
             msg = ("Broker-Definition does not seem to be valid: %s" \
                   " Use following pattern per broker: host:port." \
@@ -843,8 +836,8 @@ def validate_broker(broker_definition):
     module.params['bootstrap_server'] = final_broker_definition
 
 def validate_ipv4(broker):
-    # type: (list) -> str
-    """Validate ipv4-address, trying to build a tcp-connection to given address.
+    # type: (list)
+    """Validate IPv4-address, trying to build a tcp-connection to given address.
 
     Keyword arguments:
     broker -- definition of one broker, as a list: [host,port]
@@ -866,7 +859,35 @@ def validate_ipv4(broker):
               %(broker)
               )
         fail_module(msg)
-    return str(ip)+":"+str(port)
+
+def validate_ipv6(broker):
+    # type: (str)
+    """Validate IPv6-address, trying to build a tcp-connection to given address.
+
+    Keyword arguments:
+    broker -- definition of one broker, as a list: [host,port]
+
+    Return:
+    broker -- valid broker as string: 'host:port'
+    """
+    # split broker-definition in ip-address and port
+    ip_port = broker.rsplit(":",1)
+    port = validate_port(ip_port[1])
+    ip = ip_port[0]
+    # remove square bracket from ipv6-definition, eg. [::1]
+    ip = ip[1:-1]
+
+    sock_ipv6 = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+    try:
+        sock_ipv6.connect((ip,port))
+        sock_ipv6.close()
+    except socket.error:
+        sock_ipv6.close()
+        msg = ("Can not connect to broker: %s" \
+              " Please check if the definition is right." \
+              %(broker)
+              )
+        fail_module(msg)
 
 def validate_port(port):
     # type: (str) -> int
