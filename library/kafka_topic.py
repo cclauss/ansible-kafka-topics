@@ -56,6 +56,7 @@ options:
     description:
       - Kafka-Broker which is a member of the Kafka-Cluster you want to create the topic on.
       - Use the following format: "host:port".
+      - Also supports now IPv6-definitions.
     required: true
     type: list
 
@@ -824,12 +825,6 @@ def validate_broker(broker_definition):
             validate_ipv4(broker_parts)
         if len(broker_parts) > 2:
             validate_ipv6(broker)
-#            msg = ("It seems you tried so set an IPv6-Address: %s" \
-#                  " We do not support that so far - please set" \
-#                  " an IPv4-Address." \
-#                  %(broker)
-#                  )
-#            fail_module(msg)
         if len(broker_parts) < 2:
             msg = ("Broker-Definition does not seem to be valid: %s" \
                   " Use following pattern per broker: host:port." \
