@@ -11,7 +11,7 @@
         partitions: 2
         replication_factor: 2
         bootstrap_server:
-         - localhost:9092
+         - "[::1]:9092"
         cleanup_policy: delete
         compression_type: gzip
         delete_retention_ms: 10ms
@@ -27,10 +27,10 @@
         min_compaction_lag_ms: 10ms
         min_insync_replicas: 1
         preallocate: true
-        retention_bytes: 200KiB
+        retention_bytes: 1000B
         retention_ms: 10ms
         segment_bytes: 14B
-        segment_index_bytes: 2GB
+        segment_index_bytes: 4KiB
         segment_jitter_ms: 10ms
         segment_ms: 10ms
         unclean_leader_election_enable: true
