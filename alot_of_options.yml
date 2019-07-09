@@ -14,24 +14,24 @@
          - localhost:9092
         cleanup_policy: delete
         compression_type: gzip
-        delete_retention_ms: 1h
-        file_delete_delay_ms: 1h
+        delete_retention_ms: 10ms
+        file_delete_delay_ms: 10ms
         flush_messages: 50
-        flush_ms: 3s
+        flush_ms: 10ms
         index_interval_bytes: 100kB
         max_message_bytes: 1MiB
         message_format_version: 2.1-IV0
-        message_timestamp_difference_max_ms: 3m
+        message_timestamp_difference_max_ms: 10ms
         message_timestamp_type: LogAppendTime
         min_cleanable_dirty_ratio: 0.6
-        min_compaction_lag_ms: 10s
+        min_compaction_lag_ms: 10ms
         min_insync_replicas: 1
         preallocate: true
         retention_bytes: 200KiB
-        retention_ms: 1ms
-        segment_bytes: 1KiB
-        segment_index_bytes: 2GiB
-        segment_jitter_ms: 3d
-        segment_ms: 1d
+        retention_ms: 10ms
+        segment_bytes: 14B
+        segment_index_bytes: 2GB
+        segment_jitter_ms: 10ms
+        segment_ms: 10ms
         unclean_leader_election_enable: true
         message_downconversion_enable: false
