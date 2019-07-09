@@ -259,7 +259,6 @@ from confluent_kafka.admin import AdminClient, NewTopic, NewPartitions, ConfigRe
 
 import re
 import socket
-import time
 
 import pdb
 
@@ -549,7 +548,7 @@ def add_config_together(module):
         "message.downconversion.enable":module.params["message_downconversion_enable"]
     }
 
-    # because java-bools are all lowercase and get returned as string, lower these bools for comparing
+    # because java-bools are all lowercase and get returned as string, convert python-bool to string and lower for comparision
     if configs['preallocate'] is not None:
         configs['preallocate'] = str(configs['preallocate']).lower()
 
@@ -675,7 +674,7 @@ def convert_time_ms(time_ms,config_type):
 
     for unit, value in unit_map.items():
         if value[0] is not None:
-            # cut of char with regex, which indicates timetype and is not an int
+            # cut of non-int-char with regex, which just indicates timetype
             value[0] = re.match(r"^\d+",value[0]).group()
             ms_total = ms_total + int(value[0])*value[1]
 
@@ -747,12 +746,12 @@ def convert_storage_bytes(storage, config_type):
     config_type -- for setting config and error-msg
     """
     # ^((?P<KiB>\d+KiB)|(?P<MiB>\d+MiB)|(?P<GiB>\d+GiB)|(?P<TiB>\d+TiB)|(?P<kB>\d+kB)|(?P<MB>\d+MB)|(?P<GB>\d+GB)|(?P<TB>\d+TB))?$
-    rema = re.match(r"^((?P<KiB>\d+KiB)|(?P<MiB>\d+MiB)|(?P<GiB>\d+GiB)|(?P<TiB>\d+TiB)|(?P<kB>\d+kB)|(?P<MB>\d+MB)|(?P<GB>\d+GB)|(?P<TB>\d+TB))?$", storage)
+    rema = re.match(r"^((?P<KiB>\d+KiB)|(?P<MiB>\d+MiB)|(?P<GiB>\d+GiB)|(?P<TiB>\d+TiB)|(?P<kB>\d+kB)|(?P<MB>\d+MB)|(?P<GB>\d+GB)|(?P<TB>\d+TB)|(?P<B>\d+B))?$", storage)
 
     t = rema.span()
     if t[1] == 0:
         msg = ("Could not parse given %s: %s into bytes." \
-              " Please use one of the following units: KiB, MiB, GiB, TiB, kB, MB, GB, TB." \
+              " Please use one of the following units: KiB, MiB, GiB, TiB, kB, MB, GB, TB, B." \
               %(config_type, storage)
               )
         fail_module(msg)
@@ -766,12 +765,14 @@ def convert_storage_bytes(storage, config_type):
         "kB":[rema.group("kB"),1000],
         "MB":[rema.group("MB"),1000000],
         "GB":[rema.group("GB"),1000000000],
-        "TB":[rema.group("TB"),1000000000000]
+        "TB":[rema.group("TB"),1000000000000],
+        "B":[rema.group("B"),1]
     }
 
     #find the one matched storage-unit, and convert to bytes
     for unit, value in unit_map.items():
         if value[0] is not None:
+            # cut off non-int-char
             value[0] = re.match(r"^\d+",value[0]).group()
             bytes_total = int(value[0])*value[1]
 
