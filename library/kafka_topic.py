@@ -871,9 +871,9 @@ def validate_ipv6(broker):
     broker -- valid broker as string: 'host:port'
     """
     # split broker-definition in ip-address and port
-    ipport = broker.rsplit(":",1)
-    port = validate_port(ipport[1])
-    ip = ipport[0]
+    ip_port = broker.rsplit(":",1)
+    port = validate_port(ip_port[1])
+    ip = ip_port[0]
     # remove square bracket from ipv6-definition, eg. [::1]
     ip = ip[1:-1]
 
