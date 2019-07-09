@@ -1014,7 +1014,7 @@ def main():
         message_downconversion_enable=dict(type='bool'),
         sasl_mechanism=dict(type='str', choices=['GSSAPI', 'PLAIN', 'SCRAM-SHA-256', \
                 'SCRAM-SHA-512', 'OAUTHBEARER']),
-        sasl_password=dict(type='str'),
+        sasl_password=dict(type='str',no_log=True),
         sasl_username=dict(type='str'),
         security_protocol=dict(type='str', choices=['plaintext', 'ssl']),
         ca_location=dict(type='str')
