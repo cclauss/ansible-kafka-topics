@@ -307,7 +307,13 @@ def check_topic(topic):
     Keyword arguments:
     topic -- topicname
     """
-    topics = admin.list_topics(timeout=5).topics    #type(topics)=dict
+    try:
+        topics = admin.list_topics(timeout=5).topics    #type(topics)=dict
+    except KafkaError as e:
+        msg = ("Can not retrieve topic %s: %s" \
+              %(topic, e)
+              )
+        fail_module(msg)
     try:
         topics[topic]
     except KeyError:
@@ -327,7 +333,13 @@ def compare_part_rep(topic, partitions, replication_factor):
     Return:
     bool -- True if change is needed, else False
     """
-    metadata = admin.list_topics()                                    #type(metadata.topics) = dict
+    try:
+        metadata = admin.list_topics()                                    #type(metadata.topics) = dict
+    except KafkaError as e:
+        msg = ("Can not get metadata of topic %s: %s" \
+              %(topic, e)
+        )
+        fail_module(msg)
     old_part = len(metadata.topics[topic].partitions)                 #access partitions of topic over .partitions-func
     old_rep = len(metadata.topics[topic].partitions[0].replicas)      #type(partitions) = dict, access replicas with partition-id as key over .replicas-func
     if partitions < old_part:
@@ -360,7 +372,12 @@ def compare_config(topic, new_config):
     bool -- True if change is needed, else False
     """
     resource = [ConfigResource("TOPIC", topic)]
-    des = admin.describe_configs(resource)
+    try:
+        des = admin.describe_configs(resource)
+    except KafkaException as e:
+        msg = ("Can not retrieve topic-config from topic %s: %s" \
+              %(topic, e)
+              )
 
     y = list(des.values())
     old_conf = y[0].result()
@@ -382,7 +399,13 @@ def modify_config(topic, new_config):
     new_config -- dictionary with new config
     """
     resource = [ConfigResource("TOPIC", topic)]
-    des = admin.describe_configs(resource)
+
+    try:
+        des = admin.describe_configs(resource)
+    except KafkaException as e:
+        msg = ("Can not retrieve topic-config from topic %s: %s" \
+              %(topic, e)
+              )
 
     y = list(des.values())
     old_conf = y[0].result()
@@ -576,6 +599,52 @@ def add_config_together(topic, module):
             new_conf[conf] = value
         else:
             new_conf[conf] = old_conf[conf].value
+    return new_conf
+
+def add_first_config_together(module):
+    # type: (AnsibleModule) -> dict
+    """Add different topic-configurations together in one dictionary.
+    This will only used this way when a topic is new created.
+
+    Keyword arguments:
+    module -- This Ansiblemodule-object, containing the user-arguments
+
+    Return:
+    new_config -- dictionary containing complete topic-configuration
+    """
+    #retrieve user-set config
+    configs = {
+        "cleanup.policy":module.params["cleanup_policy"],
+        "compression.type":module.params["compression_type"],
+        "delete.retention.ms":module.params["delete_retention_ms"],
+        "file.delete.delay.ms":module.params["file_delete_delay_ms"],
+        "flush.messages":module.params["flush_messages"],
+        "flush.ms":module.params["flush_ms"],
+        "follower.replication.throttled.replicas":module.params["follower_replication_throttled_replicas"],
+        "index.interval.bytes":module.params["index_interval_bytes"],
+        "leader.replication.throttled.replicas":module.params["leader_replication_throttled_replicas"],
+        "max.message.bytes":module.params["max_message_bytes"],
+        "message.format.version":module.params["message_format_version"],
+        "message.timestamp.difference.max.ms":module.params["message_timestamp_difference_max_ms"],
+        "message.timestamp.type":module.params["message_timestamp_type"],
+        "min.cleanable.dirty.ratio":module.params["min_cleanable_dirty_ratio"],
+        "min.compaction.lag.ms":module.params["min_compaction_lag_ms"],
+        "min.insync.replicas":module.params["min_insync_replicas"],
+        "preallocate":module.params["preallocate"],
+        "retention.bytes":module.params["retention_bytes"],
+        "retention.ms":module.params["retention_ms"],
+        "segment.bytes":module.params["segment_bytes"],
+        "segment.index.bytes":module.params["segment_index_bytes"],
+        "segment.jitter.ms":module.params["segment_jitter_ms"],
+        "segment.ms":module.params["segment_ms"],
+        "unclean.leader.election.enable":module.params["unclean_leader_election_enable"],
+        "message.downconversion.enable":module.params["message_downconversion_enable"]
+    }
+
+    new_conf = {}
+    for conf, value in configs.items():
+        if configs[conf] is not None:
+            new_conf[conf] = value
     return new_conf
 
 def validate_delete_retention_ms(delete_retention_ms):
@@ -1160,7 +1229,7 @@ def main():
 
     # if topic does not exist, but should, create and configure
     if not topic_exists and (module.params['state'] == "present"):
-        new_conf = add_config_together(module)
+        new_conf = add_first_config_together(module)
         create_topic(module.params['name'], module.params['partitions'], \
                 module.params['replication_factor'], new_conf)
         result['changed'] = True
