@@ -514,10 +514,12 @@ def validate_factor(factor):
 ##########################################
 
 def add_config_together(topic, module):
+    # type: (str, AnsibleModule) -> dict
     """Add different topic-configurations together in one dictionary.
-    If a topic-config isn't specified, the default-value is set.
+    If a topic-config isn't specified, the one already set will be kept.
 
     Keyword arguments:
+    topic -- Topicname
     module -- This Ansiblemodule-object, containing the user-arguments
 
     Return:
