@@ -395,8 +395,8 @@ def modify_config(topic, new_config):
         y = list(des.values())
         y[0].result()                        #use .result-func for finalizing
     except KafkaException as e:
-        msg = ("Failed to finalize config-change for topic %si, %s" \
-              %(topic,e)
+        msg = ("Failed to finalize config-change for topic %s: %s" \
+              %(topic, e)
               )
         fail_module(msg)
 
@@ -415,9 +415,9 @@ def modify_part(topic, new_part):
         fs = admin.create_partitions(new_parts, validate_only=False)
         y = list(fs.values())
         y[0].result()
-    except KafkaException:
-        msg = ("Failed to finalize partition-change for topic %s" \
-              %(topic)
+    except KafkaException as e:
+        msg = ("Failed to finalize partition-change for topic %s: %s" \
+              %(topic, e)
               )
         fail_module(msg)
 
@@ -438,9 +438,9 @@ def create_topic(topic, partitions, replication_factor, new_conf):
         fs = admin.create_topics(topic)
         y = list(fs.values())
         y[0].result()
-    except KafkaException:
-        msg = ("Failed to create topic %s." \
-              %(topic)
+    except KafkaException as e:
+        msg = ("Failed to create topic %s: %s." \
+              %(topic, e)
               )
         fail_module(msg)
 
@@ -458,9 +458,9 @@ def delete_topic(topic):
         fs = admin.delete_topics(topic)
         y = list(fs.values())
         y[0].result()
-    except KafkaException:
-        msg = ("Failed to delete topic %s." \
-              %(topic)
+    except KafkaException as e:
+        msg = ("Failed to delete topic %s: %s" \
+              %(topic, e)
               )
         fail_module(msg)
 
