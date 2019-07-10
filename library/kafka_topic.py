@@ -215,21 +215,21 @@ options:
       - Choose one of these: PLAIN, GSSAPI, SCRAM-SHA-256, SCRAM-SHA-512 and OAUTHBEARER.
       - Can be set as an environment-variable: KAFKA_SASL_MECHANISM.
     type: str
-  sasl_password:
+  password:
     description:
       - SASL-Password.
       - Can be set as an environment-variable: KAFKA_PASSWORD.
     type: str
-  sasl_username:
+  username:
     description:
       - SASL-username.
       - Can be set as an environment-variable: KAFKA_USER.
     type: str
-  security_protocol:
+  use_tls:
     description:
-      - Either Plaintext or SSL.
+      - If set to true, TLS will be used, else plaintext..
       - Can be set as an environment-variable: KAFKA_USE_TLS.
-    type: str
+    type: bool
   ca_location:
     description:
       - Location of your certificate.
@@ -976,18 +976,18 @@ def validate_sasl_PLAIN():
     Set each value in admin_conf.
     """
 
-    if module.params['sasl_username'] is None \
-    or module.params['sasl_password'] is None \
-    or module.params['security_protocol'] is None:
+    if module.params['username'] is None \
+    or module.params['password'] is None \
+    or module.params['use_tls'] is None:
         msg = ("If you choose PLAIN as sasl_mechanism," \
-              " you also need to set: sasl_username," \
-              " sasl_password and security_protocol." \
+              " you also need to set: username," \
+              " password and use_tls." \
               )
         fail_module(msg)
     admin_conf['sasl.mechanism'] = "PLAIN"
-    admin_conf['sasl.password'] = module.params['sasl_password']
-    admin_conf['sasl.username'] = module.params['sasl_username']
-    if module.params['security_protocol'] == "ssl":
+    admin_conf['sasl.password'] = module.params['password']
+    admin_conf['sasl.username'] = module.params['username']
+    if module.params['use_tls'] == True:
         admin_conf['security.protocol'] = "sasl_ssl"
     else:
         admin_conf['security.protocol'] = "sasl_plaintext"
@@ -1066,9 +1066,9 @@ def main():
         message_downconversion_enable=dict(type='bool'),
         sasl_mechanism=dict(type='str', choices=['GSSAPI', 'PLAIN', 'SCRAM-SHA-256', \
                 'SCRAM-SHA-512', 'OAUTHBEARER']),
-        sasl_password=dict(type='str',no_log=True),
-        sasl_username=dict(type='str'),
-        security_protocol=dict(type='str', choices=['plaintext', 'ssl']),
+        password=dict(type='str', no_log=True),
+        username=dict(type='str'),
+        use_tls=dict(type='bool'),
         ca_location=dict(type='str')
     )
 
@@ -1086,9 +1086,9 @@ def main():
     # dict of params which can be set by env-var
     env_param = dict(
         sasl_mechanism="KAFKA_SASL_MECHANISM",
-        sasl_password="KAFKA_PASSWORD",
-        sasl_username="KAFKA_USER",
-        security_protocol="KAFKA_USE_TLS",
+        password="KAFKA_PASSWORD",
+        username="KAFKA_USER",
+        use_tls="KAFKA_USE_TLS",
         ca_location="KAFKA_CA_LOCATION"
     )
 
@@ -1117,7 +1117,7 @@ def main():
 
     # map param to corresponding validation-function
     # Choice-Parameter are left out because Ansible validates them
-    # Child-Parameter like sasl_username are left out aswell because
+    # Child-Parameter like username are left out aswell because
     # they get validated through their parent-param like sasl_mechanism
     params_valid_dict = dict(
         name=validate_name,
