@@ -1065,7 +1065,15 @@ def main():
 
     # bootstrap-server can also be an env-var, but must be parsed into a list
     if module.params['bootstrap_server'] is None:
-        module.params['bootstrap_server']=json.loads(os.environ.get('KAFKA_BOOTSTRAP'))
+        try:
+            module.params['bootstrap_server']=json.loads(os.environ['KAFKA_BOOTSTRAP'])
+        except KeyError:
+            msg = ("It seems that there is no bootstrap-server definition in"\
+                  " the playbook and also not as an environment-variable."\
+                  " If you want to use an environment-variable, make sure it's"\
+                  " name is 'KAFKA_BOOTSTRAP'."
+                  )
+            fail_module(msg)
 
     # loop through env-param-dict and set all params which are set in env
     for key, value in env_param.items():
