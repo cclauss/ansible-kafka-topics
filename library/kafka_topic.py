@@ -260,6 +260,8 @@ from confluent_kafka.admin import AdminClient, NewTopic, NewPartitions, ConfigRe
 
 import re
 import socket
+import os
+import json
 
 import pdb
 
@@ -923,13 +925,13 @@ def validate_sasl_mechanism(sasl_mechanism):
     """
     if sasl_mechanism == "PLAIN":
         validate_sasl_PLAIN()
-    if sasl_mechanism == "GSSAPI":
+    elif sasl_mechanism == "GSSAPI":
         fail_module("GSSAPI not supported so far")
-    if sasl_mechanism == "SCRAM-SHA-256":
+    elif sasl_mechanism == "SCRAM-SHA-256":
         fail_module("SCRAM-SHA-256 not supported so far")
-    if sasl_mechanism == "SCRAM-SHA-512":
+    elif sasl_mechanism == "SCRAM-SHA-512":
         fail_module("SCRAM-SHA-512 not supported so far")
-    if sasl_mechanism == "OAUTHBEARER":
+    elif sasl_mechanism == "OAUTHBEARER":
         fail_module("OAUTHBEARER not supported so far")
     else:
         msg = ("Supported SASL-Mechanisms are: PLAIN,"\
@@ -1000,7 +1002,7 @@ def main():
         state=dict(type='str', required=True, choices=['absent', 'present']),
         partitions=dict(type='int', required=True),
         replication_factor=dict(type='int', required=True),
-        bootstrap_server=dict(type='list', required=True),
+        bootstrap_server=dict(type='list'),
         cleanup_policy=dict(type='str', choices=['compact', 'delete']),
         compression_type=dict(type='str', choices=['uncompressed', 'zstd', 'lz4', 'snappy', \
                 'gzip', 'producer']),
@@ -1051,6 +1053,25 @@ def main():
         argument_spec=module_args,
     )
 
+
+    # dict of params which can be set by env-var
+    env_param = dict(
+        sasl_mechanism="KAFKA_SASL_MECHANISM",
+        sasl_password="KAFKA_PASSWORD",
+        sasl_username="KAFKA_USER",
+        security_protocol="KAFKA_USE_TLS",
+        ca_location="KAFKA_CA_LOCATION"
+    )
+
+    # bootstrap-server can also be an env-var, but must be parsed into a list
+    if module.params['bootstrap_server'] is None:
+        module.params['bootstrap_server']=json.loads(os.environ.get('KAFKA_BOOTSTRAP'))
+
+    # loop through env-param-dict and set all params which are set in env
+    for key, value in env_param.items():
+        if module.params[key] is None:
+            module.params[key] = os.environ.get(value)
+
     # admin-config dictionary for creating adminclient
     admin_conf = {}
 
@@ -1093,8 +1114,6 @@ def main():
 
     #create admin_conf-dict for connection-params like authentication
     admin_conf['bootstrap.servers'] = module.params['bootstrap_server']
-
-    #pdb.set_trace()
 
     # after validation, initialize object AdminClient for configuring topics on kafka-broker
     admin = AdminClient(admin_conf)
