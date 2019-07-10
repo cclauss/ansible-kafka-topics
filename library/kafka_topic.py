@@ -57,6 +57,8 @@ options:
       - Kafka-Broker which is a member of the Kafka-Cluster you want to create the topic on.
       - Use the following format: "host:port".
       - Also supports now IPv6-definitions.
+      - Can be set as an environment-variable looking like this:
+      - KAFKA_BOOTSTRAP='["host:port","host:port"]'
     required: true
     type: list
 
@@ -207,6 +209,33 @@ options:
       - Corresponds to the topic-config "message.downconversion.enable" from Apache Kafka.
     type: boolean
     default: true
+
+  sasl_mechansim:
+    description:
+      - Choose one of these: PLAIN, GSSAPI, SCRAM-SHA-256, SCRAM-SHA-512 and OAUTHBEARER.
+      - Can be set as an environment-variable: KAFKA_SASL_MECHANISM.
+    type: str
+  sasl_password:
+    description:
+      - SASL-Password.
+      - Can be set as an environment-variable: KAFKA_PASSWORD.
+    type: str
+  sasl_username:
+    description:
+      - SASL-username.
+      - Can be set as an environment-variable: KAFKA_USER.
+    type: str
+  security_protocol:
+    description:
+      - Either Plaintext or SSL.
+      - Can be set as an environment-variable: KAFKA_USE_TLS.
+    type: str
+  ca_location:
+    description:
+      - Location of your certificate.
+      - Can be set as an environment-variable: KAFKA_CA_LOCATION.
+    type: str
+
 '''
 EXAMPLES = '''
 ---
