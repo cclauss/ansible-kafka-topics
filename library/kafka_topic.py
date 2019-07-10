@@ -394,9 +394,9 @@ def modify_config(topic, new_config):
         des = admin.alter_configs(resource)             #alter topic with new config
         y = list(des.values())
         y[0].result()                        #use .result-func for finalizing
-    except KafkaException:
-        msg = ("Failed to finalize config-change for topic %s" \
-              %(topic)
+    except KafkaException as e:
+        msg = ("Failed to finalize config-change for topic %si, %s" \
+              %(topic,e)
               )
         fail_module(msg)
 
@@ -513,7 +513,7 @@ def validate_factor(factor):
 #                                        #
 ##########################################
 
-def add_config_together(module):
+def add_config_together(topic, module):
     """Add different topic-configurations together in one dictionary.
     If a topic-config isn't specified, the default-value is set.
 
@@ -523,34 +523,6 @@ def add_config_together(module):
     Return:
     new_config -- dictionary containing complete topic-configuration
     """
-    #default-configuration
-    default_configs = {
-        "cleanup.policy":"delete",
-        "compression.type":"producer",
-        "delete.retention.ms":"86400000",
-        "file.delete.delay.ms":"60000",
-        "flush.messages":"9223372036854775807",
-        "flush.ms":"9223372036854775807",
-        "follower.replication.throttled.replicas":"",
-        "index.interval.bytes":"4096",
-        "leader.replication.throttled.replicas":"",
-        "max.message.bytes":"1000012",
-        "message.format.version":"2.1-IV2",
-        "message.timestamp.difference.max.ms":"9223372036854775807",
-        "message.timestamp.type":"CreateTime",
-        "min.cleanable.dirty.ratio":"0.5",
-        "min.compaction.lag.ms":"0",
-        "min.insync.replicas":"1",
-        "preallocate":"false",
-        "retention.bytes":"-1",
-        "retention.ms":"604800000",
-        "segment.bytes":"1073741824",
-        "segment.index.bytes":"10485760",
-        "segment.jitter.ms":"0",
-        "segment.ms":"604800000",
-        "unclean.leader.election.enable":"false",
-        "message.downconversion.enable":"true"
-    }
     #retrieve user-set config
     configs = {
         "cleanup.policy":module.params["cleanup_policy"],
@@ -580,6 +552,12 @@ def add_config_together(module):
         "message.downconversion.enable":module.params["message_downconversion_enable"]
     }
 
+    resource = [ConfigResource("TOPIC", topic)]
+    des = admin.describe_configs(resource)
+
+    y = list(des.values())
+    old_conf = y[0].result()
+
     # because java-bools are all lowercase and get returned as string, convert python-bool to string and lower for comparision
     if configs['preallocate'] is not None:
         configs['preallocate'] = str(configs['preallocate']).lower()
@@ -595,7 +573,7 @@ def add_config_together(module):
         if configs[conf] is not None:
             new_conf[conf] = value
         else:
-            new_conf[conf] = default_configs[conf]
+            new_conf[conf] = old_conf[conf].value
     return new_conf
 
 def validate_delete_retention_ms(delete_retention_ms):
@@ -1166,7 +1144,7 @@ def main():
         if mod_part:
             modify_part(module.params['name'], module.params['partitions'])
             result['changed'] = True
-        new_conf = add_config_together(module)
+        new_conf = add_config_together(module.params['name'], module)
         mod_conf = compare_config(module.params['name'], new_conf)
         if mod_conf:
             modify_config(module.params['name'], new_conf)
