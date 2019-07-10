@@ -536,14 +536,15 @@ def validate_factor(factor):
 #                                        #
 ##########################################
 
-def add_config_together(topic, module):
-    # type: (str, AnsibleModule) -> dict
+def add_config_together(topic, module, new):
+    # type: (str, AnsibleModulei, bool) -> dict
     """Add different topic-configurations together in one dictionary.
     If a topic-config isn't specified, the one already set will be kept.
 
     Keyword arguments:
     topic -- Topicname
     module -- This Ansiblemodule-object, containing the user-arguments
+    new -- If the topic will be newly created, we won't try to get the old-config, because there is none
 
     Return:
     new_config -- dictionary containing complete topic-configuration
@@ -577,11 +578,16 @@ def add_config_together(topic, module):
         "message.downconversion.enable":module.params["message_downconversion_enable"]
     }
 
-    resource = [ConfigResource("TOPIC", topic)]
-    des = admin.describe_configs(resource)
-
-    y = list(des.values())
-    old_conf = y[0].result()
+    if not new:
+        resource = [ConfigResource("TOPIC", topic)]
+        try:
+            des = admin.describe_configs(resource)
+        except KafkaException as e:
+            msg = ("Can not retrieve topic-config from topic %s: %s"\
+                  %(topic, e)
+            )
+        y = list(des.values())
+        old_conf = y[0].result()
 
     # because java-bools are all lowercase and get returned as string, convert python-bool to string and lower for comparision
     if configs['preallocate'] is not None:
@@ -598,53 +604,8 @@ def add_config_together(topic, module):
         if configs[conf] is not None:
             new_conf[conf] = value
         else:
-            new_conf[conf] = old_conf[conf].value
-    return new_conf
-
-def add_first_config_together(module):
-    # type: (AnsibleModule) -> dict
-    """Add different topic-configurations together in one dictionary.
-    This will only used this way when a topic is new created.
-
-    Keyword arguments:
-    module -- This Ansiblemodule-object, containing the user-arguments
-
-    Return:
-    new_config -- dictionary containing complete topic-configuration
-    """
-    #retrieve user-set config
-    configs = {
-        "cleanup.policy":module.params["cleanup_policy"],
-        "compression.type":module.params["compression_type"],
-        "delete.retention.ms":module.params["delete_retention_ms"],
-        "file.delete.delay.ms":module.params["file_delete_delay_ms"],
-        "flush.messages":module.params["flush_messages"],
-        "flush.ms":module.params["flush_ms"],
-        "follower.replication.throttled.replicas":module.params["follower_replication_throttled_replicas"],
-        "index.interval.bytes":module.params["index_interval_bytes"],
-        "leader.replication.throttled.replicas":module.params["leader_replication_throttled_replicas"],
-        "max.message.bytes":module.params["max_message_bytes"],
-        "message.format.version":module.params["message_format_version"],
-        "message.timestamp.difference.max.ms":module.params["message_timestamp_difference_max_ms"],
-        "message.timestamp.type":module.params["message_timestamp_type"],
-        "min.cleanable.dirty.ratio":module.params["min_cleanable_dirty_ratio"],
-        "min.compaction.lag.ms":module.params["min_compaction_lag_ms"],
-        "min.insync.replicas":module.params["min_insync_replicas"],
-        "preallocate":module.params["preallocate"],
-        "retention.bytes":module.params["retention_bytes"],
-        "retention.ms":module.params["retention_ms"],
-        "segment.bytes":module.params["segment_bytes"],
-        "segment.index.bytes":module.params["segment_index_bytes"],
-        "segment.jitter.ms":module.params["segment_jitter_ms"],
-        "segment.ms":module.params["segment_ms"],
-        "unclean.leader.election.enable":module.params["unclean_leader_election_enable"],
-        "message.downconversion.enable":module.params["message_downconversion_enable"]
-    }
-
-    new_conf = {}
-    for conf, value in configs.items():
-        if configs[conf] is not None:
-            new_conf[conf] = value
+            if not new:
+                new_conf[conf] = old_conf[conf].value
     return new_conf
 
 def validate_delete_retention_ms(delete_retention_ms):
@@ -1215,7 +1176,7 @@ def main():
         if mod_part:
             modify_part(module.params['name'], module.params['partitions'])
             result['changed'] = True
-        new_conf = add_config_together(module.params['name'], module)
+        new_conf = add_config_together(module.params['name'], module, False)
         mod_conf = compare_config(module.params['name'], new_conf)
         if mod_conf:
             modify_config(module.params['name'], new_conf)
@@ -1229,7 +1190,7 @@ def main():
 
     # if topic does not exist, but should, create and configure
     if not topic_exists and (module.params['state'] == "present"):
-        new_conf = add_first_config_together(module)
+        new_conf = add_config_together(module.params['name'], module, True)
         create_topic(module.params['name'], module.params['partitions'], \
                 module.params['replication_factor'], new_conf)
         result['changed'] = True
