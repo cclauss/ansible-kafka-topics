@@ -503,16 +503,15 @@ def validate_name(name):
     topic -- topicname
     """
     max_length = 249
-    #regex for checking if topicname matches topic-name-grammar set from the ISVC-Project
-    rema = re.match(r"^([a-z][a-z\d-]+(\.[a-z][a-z\d-]+)*|app\.[a-z]{2,})(\.[A-Z][A-Za-z\d]+(\.v[1-9][0-9]*)?)?(-(state|command|event)(\.state|\.command|\.event)*)?(-[a-z][a-z0-9]*)?(-from\.(test|int|prod))?$", name)
+    #regex for checking if topicname only has valid characters
+    rema = re.match(r"^[[A-Za-z\d\.\-\_]+$",name)
     if rema:
         rema = rema.group(0)
     if not rema or len(rema) > max_length:
-        msg = ("Invalid name for topic." \
+        msg = ("Invalid name for topic %s." \
               " Valid characters are: a-z, A-Z, 0-9, \".\",\"-\",\"_\"" \
               " and a max-length of %s characters." \
-              " Also check out the Topic-Grammar from the ISVC-Project." \
-              %(max_length)
+              %(name, max_length)
               )
         fail_module(msg)
 
