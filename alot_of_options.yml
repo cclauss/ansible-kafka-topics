@@ -1,8 +1,6 @@
 - name: topics
   connection: local
   hosts: localhost
-  vars:
-    ansible_python_interpreter: /home/kochjo/IPA/env2/bin/python
   tasks:
     - name: single topic foobar
       kafka_topic:
