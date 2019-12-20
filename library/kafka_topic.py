@@ -83,34 +83,56 @@ options:
     type: str
     choices: [uncompressed, zstd, lz4, snappy, gzip, producer ]
     default: producer
+  delete_retention_time:
+    description:
+      - Corresponds to the topic-config "delete.retention.ms" from Apache Kafka.
+      - Use the following human-readable format: "%d%h%m%s%ms".
+    type: str
+    default: 86400000
   delete_retention_ms:
     description:
       - Corresponds to the topic-config "delete.retention.ms" from Apache Kafka.
       - Use the following format: "%d%h%m%s%ms".
     type: str
     default: 86400000
+  file_delete_delay_time:
+    description:
+      - Corresponds to the topic-config "file.delete.delay.ms" from Apache Kafka.
+      - Use the following human-readable format: "%d%h%m%s%ms".
+    type: str
+    default: 60000
   file_delete_delay_ms:
     description:
       - Corresponds to the topic-config "file.delete.delay.ms" from Apache Kafka.
-      - Use the following format: "%d%h%m%s%ms".
-    type: str
+    type: int
     default: 60000
   flush_messages:
     description:
       - Corresponds to the topic-config "flush.messages" from Apache Kafka.
     type: int
     default: 9223372036854775807
+  flush_time:
+    description:
+      - Corresponds to the topic-config "flush.ms" from Apache Kafka.
+      - Use the following human-readable format: "%d%h%m%s%ms".
+    type: str
+    default: 9223372036854775807
   flush_ms:
     description:
       - Corresponds to the topic-config "flush.ms" from Apache Kafka.
-      - Use the following format: "%d%h%m%s%ms".
-    type: str
+    type: int
     default: 9223372036854775807
   follower_replication_throttled_replicas:
     description:
       - Corresponds to the topic-config "follower.replication.throttled.replicas" from Apache Kafka.
     type: list
     default: ""
+  index_interval_size:
+    description:
+      - Corresponds to the topic-config "index.interval.bytes" from Apache Kafka.
+      - You have to use one of the following human-readable units: KiB, MiB, GiB, TiB, kB, MB, GB, TB.
+    type: int
+    default: 4096
   index_interval_bytes:
     description:
       - Corresponds to the topic-config "index.interval.bytes" from Apache Kafka.
@@ -123,13 +145,25 @@ options:
     default: ""
   max_compaction_lag_ms:
     description:
-      - Corresponds to the topic-config "max.message.bytes" from Apache Kafka.
-    type: str
+      - Corresponds to the topic-config "max.compaction.lag.ms" from Apache Kafka.
+    type: int
+    default: 9223372036854775807
+  max_compaction_lag_time:
+    description:
+      - Corresponds to the topic-config "max.compaction.lag.ms" from Apache Kafka.
+      - Use the following human-readable format: "%d%h%m%s%ms".
+    type: int
     default: 9223372036854775807ms
   max_message_bytes:
     description:
       - Corresponds to the topic-config "max.message.bytes" from Apache Kafka.
     type: int
+    default: 1000012
+  max_message_size:
+    description:
+      - Corresponds to the topic-config "max.message.bytes" from Apache Kafka.
+      - You have to use one of the following human-readable units: KiB, MiB, GiB, TiB, kB, MB, GB, TB.
+    type: str
     default: 1000012
   message_format_version:
     description:
@@ -138,6 +172,11 @@ options:
     choices: [0.8.0, 0.8.1, 0.8.2, 0.9.0, 0.10.0-IV0, 0.10.0-IV1, 0.10.1-IV0, 0.10.1-IV1, 0.10.1-IV2, 0.10.2-IV0, 0.11.0-IV0, 0.11.0-IV1, 0.11.0-IV2, 1.0-IV0, 1.1-IV0, 2.0-IV0, 2.0-IV1, 2.1-IV0, 2.1-IV1, 2.1-IV2, 2.2-IV0, 2.2-IV1]
     default: 2.2-IV1
   message_timestamp_difference_max_ms:
+    description:
+      - Corresponds to the topic-config "message.timestamp.difference.max.ms" from Apache Kafka.
+    type: int
+    default: 9223372036854775807
+  message_timestamp_difference_max_time:
     description:
       - Corresponds to the topic-config "message.timestamp.difference.max.ms" from Apache Kafka.
       - Use the following format: "%d%h%m%s%ms".
@@ -158,8 +197,13 @@ options:
   min_compaction_lag_ms:
     description:
       - Corresponds to the topic-config "min.compaction.lag.ms" from Apache Kafka.
-      - Use the following format: "%d%h%m%s%ms".
     type: int
+    default: 0
+  min_compaction_lag_time:
+    description:
+      - Corresponds to the topic-config "min.compaction.lag.ms" from Apache Kafka.
+      - Use the following format: "%d%h%m%s%ms".
+    type: str
     default: 0
   min_insync_replicas:
     description:
@@ -178,36 +222,73 @@ options:
       - Setting it to "-1" means unlimited bytes-size.
     type: int
     default: -1
+  retention_size:
+    description:
+      - Corresponds to the topic-config "retention.bytes" from Apache Kafka.
+      - Setting it to "-1" means unlimited bytes-size.
+      - Else you have to use one of the following human-readable units: KiB, MiB, GiB, TiB, kB, MB, GB, TB.
+    type: str
+    default: -1
   retention_ms:
     description:
       - Corresponds to the topic-config "retention.ms" from Apache Kafka.
       - How long a log will be retained before being discarded.
       - If set to "-1", no time limit is applied.
+    default: 604800000
+    type: int
+  retention_time:
+    description:
+      - Corresponds to the topic-config "retention.ms" from Apache Kafka.
+      - How long a log will be retained before being discarded.
+      - If set to "-1", no time limit is applied.
       - Else use the following format: "%d%h%m%s%ms".
-    default: 604800000ms (==7d)
+    default: 604800000
     type: str
   segment_bytes:
     description:
       - Corresponds to the topic-config "segment.bytes" from Apache Kafka.
-      - Must be greater than 13.
+      - Must be greater than 13 bytes.
     type: int
+    default: 1073741824
+  segment_size:
+    description:
+      - Corresponds to the topic-config "segment.bytes" from Apache Kafka.
+      - Must be greater than 13 bytes.
+      - You have to use one of the following human-readable units: KiB, MiB, GiB, TiB, kB, MB, GB, TB.
+    type: str
     default: 1073741824
   segment_index_bytes:
     description:
       - Corresponds to the topic-config "segment.index.bytes" from Apache Kafka.
     type: int
     default: 10485760
+  segment_index_size:
+    description:
+      - Corresponds to the topic-config "segment.index.bytes" from Apache Kafka.
+      - You have to use one of the following human-readable units: KiB, MiB, GiB, TiB, kB, MB, GB, TB.
+    type: str
+    default: 10485760
   segment_jitter_ms:
     description:
       - Corresponds to the topic-config "segment.jitter.ms" from Apache Kafka.
-      - Use the following format: "%d%h%m%s%ms".
     type: int
+    default: 0
+  segment_jitter_time:
+    description:
+      - Corresponds to the topic-config "segment.jitter.ms" from Apache Kafka.
+      - Use the following format: "%d%h%m%s%ms".
+    type: str
     default: 0
   segment_ms:
     description:
       - Corresponds to the topic-config "segment.ms" from Apache Kafka.
-      - Use the following format: "%d%h%m%s%ms".
     type: int
+    default: 604800000
+  segment_time:
+    description:
+      - Corresponds to the topic-config "segment.ms" from Apache Kafka.
+      - Use the following format: "%d%h%m%s%ms".
+    type: str
     default: 604800000
   unclean_leader_election_enable:
     description:
@@ -269,7 +350,7 @@ EXAMPLES = '''
     replication_factor: 2
     bootstrap_server:
       - 127.0.0.4:1234
-    retention_ms: 2d12h
+    retention_time: 2d12h
 
 #delete topic
 - name: delete topic "bar"
@@ -305,8 +386,6 @@ import os
 import json
 import time
 import random
-
-import pdb
 
 ##########################################
 #                                        #
@@ -881,6 +960,7 @@ def add_config_together(topic, module):
     new_config -- dictionary containing complete topic-configuration
     """
     # retrieve user-set config
+    # set in native kafka language
     configs = {
         "cleanup.policy": module.params["cleanup_policy"],
         "compression.type": module.params["compression_type"],
@@ -909,6 +989,31 @@ def add_config_together(topic, module):
         "unclean.leader.election.enable": module.params["unclean_leader_election_enable"],
         "message.downconversion.enable": module.params["message_downconversion_enable"]
     }
+
+    # retrieve user-set config
+    # in human readable way
+    alt_configs = {
+        "delete.retention.ms": module.params["delete_retention_time"],
+        "file.delete.delay.ms": module.params["file_delete_delay_time"],
+        "flush.ms": module.params["flush_time"],
+        "index.interval.bytes": module.params["index_interval_size"],
+        "max.compaction.lag.ms":module.params["max_compaction_lag_time"],
+        "max.message.bytes": module.params["max_message_size"],
+        "message.timestamp.difference.max.ms": module.params["message_timestamp_difference_max_time"],
+        "min.compaction.lag.ms": module.params["min_compaction_lag_time"],
+        "retention.bytes": module.params["retention_size"],
+        "retention.ms": module.params["retention_time"],
+        "segment.bytes": module.params["segment_size"],
+        "segment.index.bytes": module.params["segment_index_size"],
+        "segment.jitter.ms": module.params["segment_jitter_time"],
+        "segment.ms": module.params["segment_time"],
+    }
+
+    # set user-set config in human-readable way
+    # in config dict for further proceeding
+    for conf, value in alt_configs.items():
+        if alt_configs[conf] is not None:
+            configs[conf] = value
 
     # because java-bools are all lowercase and get returned as string, convert python-bool to string and lower for comparision
     if configs['preallocate'] is not None:
@@ -943,99 +1048,99 @@ def add_config_together(topic, module):
     return new_conf
 
 
-def validate_delete_retention_ms(delete_retention_ms):
+def validate_delete_retention_time(delete_retention_time):
     # type: (str)
-    """Validate delete_retention_ms and convert to ms.
+    """Validate delete_retention_time and convert to ms.
 
     Keyword arguments:
-    delete_retention_ms -- user configured delete-retention-ms, pattern: %d%h%m%s%ms
+    delete_retention_time -- user configured delete-retention-ms, pattern: %d%h%m%s%ms
     """
-    convert_time_ms(delete_retention_ms, "delete_retention_ms")
+    convert_time_ms(delete_retention_time, "delete_retention_time")
 
 
-def validate_file_delete_delay_ms(file_delete_delay_ms):
+def validate_file_delete_delay_time(file_delete_delay_time):
     # type: (str)
-    """Validate file_delete_delay_ms and convert to ms.
+    """Validate file_delete_delay_time and convert to ms.
 
     Keyword arguments:
-    file_delete_delay_ms -- user configured file-delete-delay-ms, pattern: %d%h%m%s%ms
+    file_delete_delay_time -- user configured file-delete-delay-ms, pattern: %d%h%m%s%ms
     """
-    convert_time_ms(file_delete_delay_ms, "file_delete_delay_ms")
+    convert_time_ms(file_delete_delay_time, "file_delete_delay_time")
 
 
-def validate_flush_ms(flush_ms):
+def validate_flush_time(flush_time):
     # type: (str)
-    """Validate flush_ms and convert to ms.
+    """Validate flush_time and convert to ms.
 
     Keyword arguments:
-    flush_ms -- user configured flush-ms, pattern: %d%h%m%s%ms
+    flush_time -- user configured flush-ms, pattern: %d%h%m%s%ms
     """
-    convert_time_ms(flush_ms, "flush_ms")
+    convert_time_ms(flush_time, "flush_time")
 
 
-def validate_max_compaction_lag_ms(max_compaction_lag_ms):
+def validate_max_compaction_lag_time(max_compaction_lag_time):
     # type: (str)
-    """Validate max_compaction_lag_ms and convert to ms.
+    """Validate max_compaction_lag_time and convert to ms.
 
     Keyword arguments:
-    max_compaction_lag_ms -- user configured max-compaction-lag-ms, pattern: %d%h%m%s%ms
+    max_compaction_lag_time -- user configured max-compaction-lag-ms, pattern: %d%h%m%s%ms
     """
-    convert_time_ms(max_compaction_lag_ms, "max_compaction_lag_ms")
+    convert_time_ms(max_compaction_lag_time, "max_compaction_lag_time")
 
 
-def validate_message_timestamp_difference_max_ms(message_timestamp_difference_max_ms):
+def validate_message_timestamp_difference_max_time(message_timestamp_difference_max_time):
     # type: (str)
-    """Validate message_timestamp_difference_max_ms and convert to ms.
+    """Validate message_timestamp_difference_max_time and convert to ms.
 
     Keyword arguments:
-    message_timestamp_difference_max_ms -- user configured message-timestamp-difference-max-ms, pattern: %d%h%m%s%ms
+    message_timestamp_difference_max_time -- user configured message-timestamp-difference-max-ms, pattern: %d%h%m%s%ms
     """
-    convert_time_ms(message_timestamp_difference_max_ms, "message_timestamp_difference_max_ms")
+    convert_time_ms(message_timestamp_difference_max_time, "message_timestamp_difference_max_time")
 
 
-def validate_min_compaction_lag_ms(min_compaction_lag_ms):
+def validate_min_compaction_lag_time(min_compaction_lag_time):
     # type: (str)
-    """Validate min_compaction_lag_ms and convert to ms.
+    """Validate min_compaction_lag_time and convert to ms.
 
     Keyword arguments:
-    min_compaction_lag_ms -- user configured min-compaction-lag-ms, pattern: %d%h%m%s%ms
+    min_compaction_lag_time -- user configured min-compaction-lag-ms, pattern: %d%h%m%s%ms
     """
-    convert_time_ms(min_compaction_lag_ms, "min_compaction_lag_ms")
+    convert_time_ms(min_compaction_lag_time, "min_compaction_lag_time")
 
 
-def validate_retention_ms(retention_ms):
+def validate_retention_time(retention_time):
     # type: (str) -> str
-    """Validate retention_ms. If -1, return string, else convert to ms.
+    """Validate retention_time. If -1, return string, else convert to ms.
 
     Keyword arguments:
-    retention_ms -- user configured retention-ms, pattern: %d%h%m%s%ms
+    retention_time -- user configured retention-ms, pattern: %d%h%m%s%ms
 
     Return:
-    retention_ms -- If set to "-1", return it
+    retention_time -- If set to "-1", return it
     """
-    if retention_ms == "-1":     # sets retention-time to unlimited
+    if retention_time == "-1":     # sets retention-time to unlimited
         return
-    convert_time_ms(retention_ms, "retention_ms")
+    convert_time_ms(retention_time, "retention_time")
 
 
-def validate_segment_jitter_ms(segment_jitter_ms):
+def validate_segment_jitter_time(segment_jitter_time):
     # type: (str)
-    """Validate segment_jitter_ms and convert to ms.
+    """Validate segment_jitter_time and convert to ms.
 
     Keyword arguments:
-    segment_jitter_ms -- user configured segment-jitter-ms, pattern: %d%h%m%s%ms
+    segment_jitter_time -- user configured segment-jitter-ms, pattern: %d%h%m%s%ms
     """
-    convert_time_ms(segment_jitter_ms, "segment_jitter_ms")
+    convert_time_ms(segment_jitter_time, "segment_jitter_time")
 
 
-def validate_segment_ms(segment_ms):
+def validate_segment_time(segment_time):
     # type: (str)
-    """Validate segment_ms and convert to ms.
+    """Validate segment_time and convert to ms.
 
     Keyword arguments:
-    segment_ms -- user configured segment-ms, pattern: %d%h%m%s%ms
+    segment_time -- user configured segment-ms, pattern: %d%h%m%s%ms
     """
-    convert_time_ms(segment_ms, "segment_ms")
+    convert_time_ms(segment_time, "segment_time")
 
 
 def convert_time_ms(time_ms, config_type):
@@ -1046,7 +1151,7 @@ def convert_time_ms(time_ms, config_type):
     time_ms -- user-given time as string
     config_type -- for setting config and error-msg
     """
-    # try to parse retention_ms with regex into groups, split by timetype
+    # try to parse retention_time with regex into groups, split by timetype
     rema = re.match(r"^(?P<days>\d+d)?(?P<hours>\d+h)?(?P<minutes>\d+m)?(?P<seconds>\d+s)?(?P<miliseconds>\d+ms)?$", time_ms)
 
     t = rema.span()
@@ -1086,56 +1191,56 @@ def convert_time_ms(time_ms, config_type):
     module.params[config_type] = ms_total
 
 
-def validate_index_interval_bytes(index_interval_bytes):
+def validate_index_interval_size(index_interval_size):
     # type: (str)
-    """Validate index_interval_bytes and convert to bytes.
+    """Validate index_interval_size and convert to bytes.
 
     Keyword arguments:
-    index_interval_bytes -- user configured index-interval-bytes, units: KiB, MiB, GiB, TiB, kB, MB, GB, TB
+    index_interval_size -- user configured index-interval-bytes, units: KiB, MiB, GiB, TiB, kB, MB, GB, TB
     """
-    convert_storage_bytes(index_interval_bytes, "index_interval_bytes")
+    convert_storage_bytes(index_interval_size, "index_interval_size")
 
 
-def validate_max_message_bytes(max_message_bytes):
+def validate_max_message_size(max_message_size):
     # type: (str)
-    """Validate max_message_bytes and convert to bytes.
+    """Validate max_message_size and convert to bytes.
 
     Keyword arguments:
-    max_message_bytes -- user configured max-message-bytes, units: KiB, MiB, GiB, TiB, kB, MB, GB, TB
+    max_message_size -- user configured max-message-bytes, units: KiB, MiB, GiB, TiB, kB, MB, GB, TB
     """
-    convert_storage_bytes(max_message_bytes, "max_message_bytes")
+    convert_storage_bytes(max_message_size, "max_message_size")
 
 
-def validate_retention_bytes(retention_bytes):
+def validate_retention_size(retention_size):
     # type: (str)
-    """Validate retention_bytes and convert to bytes.
+    """Validate retention_size and convert to bytes.
 
     Keyword arguments:
-    retention_bytes -- user configured retention_bytes, units: KiB, MiB, GiB, TiB, kB, MB, GB, TB
+    retention_size -- user configured retention_size, units: KiB, MiB, GiB, TiB, kB, MB, GB, TB
     """
-    if retention_bytes == "-1":     # sets retention-time to unlimited
+    if retention_size == "-1":     # sets retention-time to unlimited
         return
-    convert_storage_bytes(retention_bytes, "retention_bytes")
+    convert_storage_bytes(retention_size, "retention_size")
 
 
-def validate_segment_bytes(segment_bytes):
+def validate_segment_size(segment_size):
     # type: (str)
-    """Validate segment_bytes and convert to bytes.
+    """Validate segment_size and convert to bytes.
 
     Keyword arguments:
-    segment_bytes -- user configured segment_bytes, units: KiB, MiB, GiB, TiB, kB, MB, GB, TB
+    segment_size -- user configured segment_size, units: KiB, MiB, GiB, TiB, kB, MB, GB, TB
     """
-    convert_storage_bytes(segment_bytes, "segment_bytes")
+    convert_storage_bytes(segment_size, "segment_size")
 
 
-def validate_segment_index_bytes(segment_index_bytes):
+def validate_segment_index_size(segment_index_size):
     # type: (str)
-    """Validate segment_index_bytes and convert to bytes.
+    """Validate segment_index_size and convert to bytes.
 
     Keyword arguments:
-    segment_index_bytes -- user configured segment_index_bytes, units: KiB, MiB, GiB, TiB, kB, MB, GB, TB
+    segment_index_size -- user configured segment_index_size, units: KiB, MiB, GiB, TiB, kB, MB, GB, TB
     """
-    convert_storage_bytes(segment_index_bytes, "segment_index_bytes")
+    convert_storage_bytes(segment_index_size, "segment_index_size")
 
 
 def convert_storage_bytes(storage, config_type):
@@ -1179,7 +1284,7 @@ def convert_storage_bytes(storage, config_type):
             bytes_total = int(value[0])*value[1]
 
     # check if total-bytes is in valid range depending on config-type
-    if config_type == "retention_bytes":
+    if config_type == "retention_size":
         if bytes_total >= 2**63:
             msg = (
                 "Your chosen %s is way too long."
@@ -1189,7 +1294,7 @@ def convert_storage_bytes(storage, config_type):
             )
             fail_module(msg)
     else:
-        if config_type == "segment_bytes":
+        if config_type == "segment_size":
             if bytes_total < 14:
                 msg = (
                     "Your chosen %s must be at least 14 bytes."
@@ -1219,6 +1324,7 @@ def validate_broker(broker_definition):
 
 def validate_zookeeper(zookeeper_definition):
     module.params['zookeeper']=validate_server(zookeeper_definition, "zookeeper")
+
 
 def validate_server(server_definition, servertype):
     # type: (list, str) -> str
@@ -1442,15 +1548,21 @@ def main():
                 'producer'
             ]
         ),
-        delete_retention_ms = dict(type = 'str'),
-        file_delete_delay_ms = dict(type = 'str'),
+        delete_retention_time = dict(type = 'str'),
+        delete_retention_ms = dict(type = 'int'),
+        file_delete_delay_time = dict(type = 'str'),
+        file_delete_delay_ms = dict(type = 'int'),
         flush_messages = dict(type = 'int'),
-        flush_ms = dict(type = 'str'),
+        flush_time = dict(type = 'str'),
+        flush_ms= dict(type = 'int'),
         follower_replication_throttled_replicas = dict(type = 'str'),
-        index_interval_bytes = dict(type = 'str'),
+        index_interval_size = dict(type = 'str'),
+        index_interval_bytes= dict(type = 'int'),
         leader_replication_throttled_replicas = dict(type = 'str'),
-        max_compaction_lag_ms = dict(type = str),
-        max_message_bytes = dict(type = 'str'),
+        max_compaction_lag_time = dict(type = 'str'),
+        max_compaction_lag_ms= dict(type = 'int'),
+        max_message_size = dict(type = 'str'),
+        max_message_bytes= dict(type = 'int'),
         message_format_version = dict(
             type = 'str',
             choices = [
@@ -1463,18 +1575,26 @@ def main():
                 '2.3-IV0', '2.3-IV1'
             ]
         ),
-        message_timestamp_difference_max_ms = dict(type = 'str'),
+        message_timestamp_difference_max_time = dict(type = 'str'),
+        message_timestamp_difference_max_ms= dict(type = 'int'),
         message_timestamp_type = dict(type = 'str', choices = ['CreateTime', 'LogAppendTime']),
         min_cleanable_dirty_ratio = dict(type = 'float'),
-        min_compaction_lag_ms = dict(type = 'str'),
+        min_compaction_lag_time = dict(type = 'str'),
+        min_compaction_lag_ms= dict(type = 'int'),
         min_insync_replicas = dict(type = 'int'),
         preallocate = dict(type = 'bool'),
-        retention_bytes = dict(type = 'str'),
-        retention_ms = dict(type = 'str'),
-        segment_bytes = dict(type = 'str'),
-        segment_index_bytes = dict(type = 'str'),
-        segment_jitter_ms = dict(type = 'str'),
-        segment_ms = dict(type = 'str'),
+        retention_size = dict(type = 'str'),
+        retention_bytes = dict(type = 'int'),
+        retention_time = dict(type = 'str'),
+        retention_ms = dict(type = 'int'),
+        segment_size = dict(type = 'str'),
+        segment_bytes = dict(type = 'int'),
+        segment_index_size = dict(type = 'str'),
+        segment_index_bytes = dict(type = 'int'),
+        segment_jitter_time = dict(type = 'str'),
+        segment_jitter_ms = dict(type = 'int'),
+        segment_time = dict(type = 'str'),
+        segment_ms = dict(type = 'int'),
         unclean_leader_election_enable = dict(type = 'bool'),
         message_downconversion_enable = dict(type = 'bool'),
         sasl_mechanism = dict(
@@ -1493,6 +1613,23 @@ def main():
         ca_location = dict(type = 'str')
     )
 
+    exclusive_module_args = [
+        ['delete_retention_ms','delete_retention_time'],
+        ['file_delete_delay_ms','file_delete_delay_time'],
+        ['flush_ms','flush_time'],
+        ['index_interval_bytes','index_interval_size'],
+        ['max_compaction_lag_ms','max_compaction_lag_time'],
+        ['max_message_bytes','max_message_size'],
+        ['message_timestamp_difference_max_ms','message_timestamp_difference_max_time'],
+        ['min_compaction_lag_ms','min_compaction_lag_time'],
+        ['retention_bytes','retention_size'],
+        ['retention_ms','retention_time'],
+        ['segment_bytes','segment_size'],
+        ['segment_index_bytes','segment_index_size'],
+        ['segment_jitter_ms','segment_jitter_time'],
+        ['segment_ms','segment_time']
+    ]
+
     result = dict(
         changed=False,
         name='',
@@ -1500,7 +1637,8 @@ def main():
     )
 
     module = AnsibleModule(
-        argument_spec=module_args,
+        argument_spec = module_args,
+        mutually_exclusive = exclusive_module_args
     )
 
     # set topicname as result as soon as possible, for meaningful error-messages
@@ -1559,20 +1697,20 @@ def main():
         replication_factor = validate_rep_factor,
         bootstrap_server = validate_broker,
         zookeeper = validate_zookeeper,
-        delete_retention_ms = validate_delete_retention_ms,
-        file_delete_delay_ms = validate_file_delete_delay_ms,
-        flush_ms = validate_flush_ms,
-        index_interval_bytes = validate_index_interval_bytes,
-        max_compaction_lag_ms = validate_max_compaction_lag_ms,
-        max_message_bytes = validate_max_message_bytes,
-        message_timestamp_difference_max_ms = validate_message_timestamp_difference_max_ms,
-        min_compaction_lag_ms = validate_min_compaction_lag_ms,
-        retention_bytes = validate_retention_bytes,
-        retention_ms = validate_retention_ms,
-        segment_bytes = validate_segment_bytes,
-        segment_index_bytes = validate_segment_index_bytes,
-        segment_jitter_ms = validate_segment_jitter_ms,
-        segment_ms = validate_segment_ms,
+        delete_retention_time = validate_delete_retention_time,
+        file_delete_delay_time = validate_file_delete_delay_time,
+        flush_time = validate_flush_time,
+        index_interval_size = validate_index_interval_size,
+        max_compaction_lag_time = validate_max_compaction_lag_time,
+        max_message_size = validate_max_message_size,
+        message_timestamp_difference_max_time = validate_message_timestamp_difference_max_time,
+        min_compaction_lag_time = validate_min_compaction_lag_time,
+        retention_size = validate_retention_size,
+        retention_time = validate_retention_time,
+        segment_size = validate_segment_size,
+        segment_index_size = validate_segment_index_size,
+        segment_jitter_time = validate_segment_jitter_time,
+        segment_time = validate_segment_time,
         sasl_mechanism = validate_sasl_mechanism
     )
 

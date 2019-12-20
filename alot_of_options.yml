@@ -1,6 +1,9 @@
 - name: topics
   connection: local
   hosts: localhost
+#  environment:
+#    ZOOKEEPER: 
+#      - localhost:2181
   tasks:
     - name: single topic foobar
       kafka_topic:
@@ -12,26 +15,31 @@
          - "[::1]:9092"
          - localhost:9092
          - 127.0.0.1:9092
+        zookeeper:
+         - localhost:2181
         cleanup_policy: delete
         compression_type: gzip
-        delete_retention_ms: 10ms
-        file_delete_delay_ms: 10ms
+        delete_retention_time: 10ms
+        file_delete_delay_time: 10ms
         flush_messages: 50
-        flush_ms: 10ms
-        index_interval_bytes: 100kB
-        max_message_bytes: 1MiB
+        flush_time: 10ms
+        follower_replication_throttled_replicas: "*"
+        index_interval_size: 100kB
+        leader_replication_throttled_replicas: "*"
+        max_compaction_lag_time: 6d
+        max_message_size: 1MiB
         message_format_version: 2.1-IV0
-        message_timestamp_difference_max_ms: 10ms
+        message_timestamp_difference_max_time: 10ms
         message_timestamp_type: LogAppendTime
         min_cleanable_dirty_ratio: 0.6
-        min_compaction_lag_ms: 10ms
+        min_compaction_lag_time: 10ms
         min_insync_replicas: 1
         preallocate: true
-        retention_bytes: 1000B
-        retention_ms: 10ms
-        segment_bytes: 14B
-        segment_index_bytes: 4KiB
-        segment_jitter_ms: 10ms
-        segment_ms: 10ms
+        retention_size: 1000B
+        retention_time: -1
+        segment_size: 21B
+        segment_index_size: 4KiB
+        segment_jitter_time: 12ms
+        segment_time: 30ms
         unclean_leader_election_enable: true
-        message_downconversion_enable: false
+        message_downconversion_enable: true
