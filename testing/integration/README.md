@@ -9,10 +9,11 @@ Topic-configurations are only checked if they are on default or not, because par
 # requirements for local testing
 This Project of course.
 ### Kafka-Cluster
-You need 3 Kafka-Broker and at least one Zookeeper.  
+You need 3 Kafka-Broker and at least one Zookeeper on localhost listening to standard-ports.  
+Have a look on the docker-compose.yml in this dir.
 
 ### Python
-You need following for using the kafka_topic-module:
+You need everything for using the kafka_topic-module:
 - ansible
 - confluent_kafka
 - kazoo
@@ -46,26 +47,27 @@ Copy following part:
 
 ```python
     #######################################
-    #                                     #
     #  Create Topic                       #
-    #                                     #
     #######################################
     print("-------------------------------------")
     print("CREATE NEW TOPIC testTheTopicMachine")
     print("-------------------------------------")
+
+    # check checkmode
+    check_checkmode(confignames, aconf, True, "create_topic.json")
+    print("==> checkmode did not change anything")
+
+    # Real deal here
     econf = get_econf(econf, "create_topic.json")
     result = run_module("create_topic.json")
 
     compare_all(confignames, econf, aconf, result, True)
-
 ```
 into integrationtest.py **before**:
 
 ```python
     #######################################
-    #                                     #
     #  delete topic
-    #                                     #
     #######################################
 ```
 Replace Comment and Print-Statement with some text to describe your new test.  
@@ -77,6 +79,7 @@ If it looks like this, everything is alright:
 -----------------------------------------------------------
 MODIFY TOPIC testTheTopicMachine: REDUCE REPLICATION-FACTOR
 -----------------------------------------------------------
+==> checkmode did not change anything
 ==> Everything as expected
 ```
 

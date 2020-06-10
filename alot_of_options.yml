@@ -17,29 +17,30 @@
          - 127.0.0.1:9092
         zookeeper:
          - localhost:2181
-        cleanup_policy: delete
-        compression_type: gzip
-        delete_retention_time: 10ms
-        file_delete_delay_time: 10ms
-        flush_messages: 50
-        flush_time: 10ms
-        follower_replication_throttled_replicas: "*"
-        index_interval_size: 100kB
-        leader_replication_throttled_replicas: "*"
-        max_compaction_lag_time: 6d
-        max_message_size: 1MiB
-        message_format_version: 2.1-IV0
-        message_timestamp_difference_max_time: 10ms
-        message_timestamp_type: LogAppendTime
-        min_cleanable_dirty_ratio: 0.6
-        min_compaction_lag_time: 10ms
-        min_insync_replicas: 1
-        preallocate: true
-        retention_size: 1000B
-        retention_time: -1
-        segment_size: 21B
-        segment_index_size: 4KiB
-        segment_jitter_time: 12ms
-        segment_time: 30ms
-        unclean_leader_election_enable: true
-        message_downconversion_enable: true
+        config:
+          cleanup.policy: compact
+          compression.type: gzip
+          flush.messages: 50
+          follower.replication.throttled.replicas: "*"
+          leader.replication.throttled.replicas: "*"
+          message.format.version: 2.1-IV0
+          message.timestamp.type: LogAppendTime
+          min.cleanable.dirty.ratio: 0.6
+          min.insync.replicas: 1
+          preallocate: true
+          unclean.leader.election.enable: true
+          message.downconversion.enable: true
+          delete_retention_time: 10ms
+          file_delete_delay_time: 10ms
+          flush_time: 10ms
+          index_interval_size: 100kB
+          max_compaction_lag_time: 6d
+          max_message_size: 1MiB
+          message_timestamp_difference_max_time: 10ms
+          min_compaction_lag_time: 10ms
+          retention_size: 1000B
+          retention_time: "-1"
+          segment_size: 21B
+          segment_index_size: 4KiB
+          segment_jitter_time: 12ms
+          segment_time: 30ms

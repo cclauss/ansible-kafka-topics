@@ -48,7 +48,6 @@ options:
       - How many times each partition for the topic is replicated.
       - The number of replicas can not be more than the number of brokers in the cluster.
       - Replicas can not be set to zero or negative.
-      - Once the replicas are set, they can not be changed with Ansible.
     required: true
     type: int
   bootstrap_server:
@@ -63,243 +62,14 @@ options:
   zookeeper:
     description:
       - Zookeeper which is a member of the Kafka-Cluster you want to manage the topic on.
-      - Is only needed if you want to increase the number of replicas.
+      - Is only needed if you want to increase or reduce the number of replicas.
     required: false
     type: list
-
-  cleanup_policy:
+  config:
     description:
-      - Corresponds to the topic-config "cleanup.policy" from Apache Kafka.
-      - If set to "delete", old segments will be deleted when their retention time or
-        size limits have been reached.
-      - If set to "compact", old segments will be compacted when their retention time
-        or size limits have been reached.
-    type: str
-    choices: [ delete, compact ]
-    default: delete
-  compression_type:
-    description:
-      - Corresponds to the topic-config "compression.type" from Apache Kafka.
-    type: str
-    choices: [uncompressed, zstd, lz4, snappy, gzip, producer ]
-    default: producer
-  delete_retention_time:
-    description:
-      - Corresponds to the topic-config "delete.retention.ms" from Apache Kafka.
-      - Use the following human-readable format: "%d%h%m%s%ms".
-    type: str
-    default: 86400000
-  delete_retention_ms:
-    description:
-      - Corresponds to the topic-config "delete.retention.ms" from Apache Kafka.
-      - Use the following format: "%d%h%m%s%ms".
-    type: str
-    default: 86400000
-  file_delete_delay_time:
-    description:
-      - Corresponds to the topic-config "file.delete.delay.ms" from Apache Kafka.
-      - Use the following human-readable format: "%d%h%m%s%ms".
-    type: str
-    default: 60000
-  file_delete_delay_ms:
-    description:
-      - Corresponds to the topic-config "file.delete.delay.ms" from Apache Kafka.
-    type: int
-    default: 60000
-  flush_messages:
-    description:
-      - Corresponds to the topic-config "flush.messages" from Apache Kafka.
-    type: int
-    default: 9223372036854775807
-  flush_time:
-    description:
-      - Corresponds to the topic-config "flush.ms" from Apache Kafka.
-      - Use the following human-readable format: "%d%h%m%s%ms".
-    type: str
-    default: 9223372036854775807
-  flush_ms:
-    description:
-      - Corresponds to the topic-config "flush.ms" from Apache Kafka.
-    type: int
-    default: 9223372036854775807
-  follower_replication_throttled_replicas:
-    description:
-      - Corresponds to the topic-config "follower.replication.throttled.replicas" from Apache Kafka.
+      - Configs for the Topic.
+    required: false
     type: list
-    default: ""
-  index_interval_size:
-    description:
-      - Corresponds to the topic-config "index.interval.bytes" from Apache Kafka.
-      - You have to use one of the following human-readable units: KiB, MiB, GiB, TiB, kB, MB, GB, TB.
-    type: int
-    default: 4096
-  index_interval_bytes:
-    description:
-      - Corresponds to the topic-config "index.interval.bytes" from Apache Kafka.
-    type: int
-    default: 4096
-  leader_replication_throttled_replicas:
-    description:
-      - Corresponds to the topic-config "leader.replication.throttled.replicas" from Apache Kafka.
-    type: list
-    default: ""
-  max_compaction_lag_ms:
-    description:
-      - Corresponds to the topic-config "max.compaction.lag.ms" from Apache Kafka.
-    type: int
-    default: 9223372036854775807
-  max_compaction_lag_time:
-    description:
-      - Corresponds to the topic-config "max.compaction.lag.ms" from Apache Kafka.
-      - Use the following human-readable format: "%d%h%m%s%ms".
-    type: int
-    default: 9223372036854775807ms
-  max_message_bytes:
-    description:
-      - Corresponds to the topic-config "max.message.bytes" from Apache Kafka.
-    type: int
-    default: 1000012
-  max_message_size:
-    description:
-      - Corresponds to the topic-config "max.message.bytes" from Apache Kafka.
-      - You have to use one of the following human-readable units: KiB, MiB, GiB, TiB, kB, MB, GB, TB.
-    type: str
-    default: 1000012
-  message_format_version:
-    description:
-      - Corresponds to the topic-config "message.format.version" from Apache Kafka.
-    type: str
-    choices: [0.8.0, 0.8.1, 0.8.2, 0.9.0, 0.10.0-IV0, 0.10.0-IV1, 0.10.1-IV0, 0.10.1-IV1, 0.10.1-IV2, 0.10.2-IV0, 0.11.0-IV0, 0.11.0-IV1, 0.11.0-IV2, 1.0-IV0, 1.1-IV0, 2.0-IV0, 2.0-IV1, 2.1-IV0, 2.1-IV1, 2.1-IV2, 2.2-IV0, 2.2-IV1]
-    default: 2.2-IV1
-  message_timestamp_difference_max_ms:
-    description:
-      - Corresponds to the topic-config "message.timestamp.difference.max.ms" from Apache Kafka.
-    type: int
-    default: 9223372036854775807
-  message_timestamp_difference_max_time:
-    description:
-      - Corresponds to the topic-config "message.timestamp.difference.max.ms" from Apache Kafka.
-      - Use the following format: "%d%h%m%s%ms".
-    type: str
-    default: 9223372036854775807
-  message_timestamp_type:
-    description:
-      - Corresponds to the topic-config "message.timestamp.type" from Apache Kafka.
-    type: str
-    choices: [CreateTime, LogAppendTime]
-    default: CreateTime
-  min_cleanable_dirty_ratio:
-    description:
-      - Corresponds to the topic-config "min.cleanable.dirty.ratio" from Apache Kafka.
-      - Range: 0-1
-    type: float
-    default: 0.5
-  min_compaction_lag_ms:
-    description:
-      - Corresponds to the topic-config "min.compaction.lag.ms" from Apache Kafka.
-    type: int
-    default: 0
-  min_compaction_lag_time:
-    description:
-      - Corresponds to the topic-config "min.compaction.lag.ms" from Apache Kafka.
-      - Use the following format: "%d%h%m%s%ms".
-    type: str
-    default: 0
-  min_insync_replicas:
-    description:
-      - Corresponds to the topic-config "min.insync.replicas" from Apache Kafka.
-      - Must be greater than 0.
-    type: int
-    default: 1
-  preallocate:
-    description:
-      - Corresponds to the topic-config "preallocate" from Apache Kafka.
-    type: boolean
-    default: false
-  retention_bytes:
-    description:
-      - Corresponds to the topic-config "retention.bytes" from Apache Kafka.
-      - Setting it to "-1" means unlimited bytes-size.
-    type: int
-    default: -1
-  retention_size:
-    description:
-      - Corresponds to the topic-config "retention.bytes" from Apache Kafka.
-      - Setting it to "-1" means unlimited bytes-size.
-      - Else you have to use one of the following human-readable units: KiB, MiB, GiB, TiB, kB, MB, GB, TB.
-    type: str
-    default: -1
-  retention_ms:
-    description:
-      - Corresponds to the topic-config "retention.ms" from Apache Kafka.
-      - How long a log will be retained before being discarded.
-      - If set to "-1", no time limit is applied.
-    default: 604800000
-    type: int
-  retention_time:
-    description:
-      - Corresponds to the topic-config "retention.ms" from Apache Kafka.
-      - How long a log will be retained before being discarded.
-      - If set to "-1", no time limit is applied.
-      - Else use the following format: "%d%h%m%s%ms".
-    default: 604800000
-    type: str
-  segment_bytes:
-    description:
-      - Corresponds to the topic-config "segment.bytes" from Apache Kafka.
-      - Must be greater than 13 bytes.
-    type: int
-    default: 1073741824
-  segment_size:
-    description:
-      - Corresponds to the topic-config "segment.bytes" from Apache Kafka.
-      - Must be greater than 13 bytes.
-      - You have to use one of the following human-readable units: KiB, MiB, GiB, TiB, kB, MB, GB, TB.
-    type: str
-    default: 1073741824
-  segment_index_bytes:
-    description:
-      - Corresponds to the topic-config "segment.index.bytes" from Apache Kafka.
-    type: int
-    default: 10485760
-  segment_index_size:
-    description:
-      - Corresponds to the topic-config "segment.index.bytes" from Apache Kafka.
-      - You have to use one of the following human-readable units: KiB, MiB, GiB, TiB, kB, MB, GB, TB.
-    type: str
-    default: 10485760
-  segment_jitter_ms:
-    description:
-      - Corresponds to the topic-config "segment.jitter.ms" from Apache Kafka.
-    type: int
-    default: 0
-  segment_jitter_time:
-    description:
-      - Corresponds to the topic-config "segment.jitter.ms" from Apache Kafka.
-      - Use the following format: "%d%h%m%s%ms".
-    type: str
-    default: 0
-  segment_ms:
-    description:
-      - Corresponds to the topic-config "segment.ms" from Apache Kafka.
-    type: int
-    default: 604800000
-  segment_time:
-    description:
-      - Corresponds to the topic-config "segment.ms" from Apache Kafka.
-      - Use the following format: "%d%h%m%s%ms".
-    type: str
-    default: 604800000
-  unclean_leader_election_enable:
-    description:
-      - Corresponds to the topic-config "unclean.leader.election.enable" from Apache Kafka.
-    type: boolean
-    default: false
-  message_downconversion_enable:
-    description:
-      - Corresponds to the topic-config "message.downconversion.enable" from Apache Kafka.
-    type: boolean
-    default: true
 
   sasl_mechansim:
     description:
@@ -340,6 +110,8 @@ EXAMPLES = '''
     bootstrap_server:
       - localhost:9092
       - 10.10.4.5:5678
+    config:
+      - retention.ms: 1000
 
 #modify topic
 - name: modify topic "foo"
@@ -350,7 +122,8 @@ EXAMPLES = '''
     replication_factor: 2
     bootstrap_server:
       - 127.0.0.4:1234
-    retention_time: 2d12h
+    config:
+      - preallocate: true
 
 #delete topic
 - name: delete topic "bar"
@@ -361,7 +134,6 @@ EXAMPLES = '''
     replication_factor: 1
     bootstrap_server:
       - 143.34.62.87:45078
-    cleanup_policy: compact
 '''
 RETURN = '''
 ---
@@ -386,6 +158,8 @@ import os
 import json
 import time
 import random
+
+import pdb
 
 ##########################################
 #                                        #
@@ -446,7 +220,10 @@ def compare_part(topic, partitions):
         fail_module(msg)
     if partitions == old_part:
         return False
+    diff['before']['partitions'] = old_part
+    diff['after']['partitions'] = partitions
     return True
+
 
 def compare_rep(topic, replication_factor):
     # type: (str, int) -> bool
@@ -478,6 +255,8 @@ def compare_rep(topic, replication_factor):
                 % (old_rep, replication_factor)
             )
             fail_module(msg)
+        diff['before']['replication_factor'] = old_rep
+        diff['after']['replication_factor'] = replication_factor
         return True
     # if replication_factor == old_rep:
     return False
@@ -519,13 +298,16 @@ def compare_config(topic, new_config):
     bool -- True if change is needed, else False
     """
     old_conf = get_topic_config(topic)
+    change = False
 
     # iterate through old-config
     for config, oldvalue in old_conf.items():
         try:
             # if a config in playbook is different than old-config, return new
             if oldvalue.value != str(new_config[config]):
-                return True
+                diff['before'][config] = oldvalue.value
+                diff['after'][config] = new_config[config]
+                change = True
         # if config is not set in playbook, catch keyerror.
         except KeyError:
             # Check if config, which is not set in playbook,
@@ -535,8 +317,10 @@ def compare_config(topic, new_config):
                 # 4 == STATIC_BROKER_CONFIG
                 # which is as good as default
                 if old_conf[config].source != 4:
-                    return True
-    return False
+                    diff['before'][config] = oldvalue.value
+                    diff['after'][config] = "defaultvalue"
+                    change = True
+    return change
 
 
 def modify_part(topic, new_part):
@@ -560,6 +344,7 @@ def modify_part(topic, new_part):
         )
         fail_module(msg)
 
+
 def modify_rep(topic, partitions, replication_factor, zookeeper):
     # type: (str, int, int, str)
     """Increase number of replicas per partition.
@@ -569,6 +354,9 @@ def modify_rep(topic, partitions, replication_factor, zookeeper):
     partitions -- number of partitions
     replication_factor -- number of replications
     zookeeper -- host:port from a zookeeper which is part of the Kafka-Cluster
+
+    Return:
+    consumed -- wether znode is consumed or not
     """
     # Create Connection to zookeeper
     zk = get_zookeeper_connection()
@@ -712,7 +500,7 @@ def create_topic(topicname, partitions, replication_factor, new_conf):
     Keyword arguments:
     topicname -- topicname
     partitions -- number of partitions
-    replication_factor -- number of replications, which is once set immutable
+    replication_factor -- number of replications, which is once set only mutable with a zookeeper
     new_conf -- dictionary with topic-config, for example containing retention.ms
     """
     all_valid = False
@@ -722,7 +510,7 @@ def create_topic(topicname, partitions, replication_factor, new_conf):
         topic = [NewTopic(topicname, num_partitions=partitions, replication_factor=replication_factor, config=new_conf)]
 
         try:
-            # only validate creating of topic
+            # only validate creation of topic
             fs = admin.create_topics(topic, validate_only = True)
             y = list(fs.values())
             y[0].result()
@@ -846,7 +634,7 @@ def create_znode(zookeeper_client, znode, data):
 
 
 def wait_until_znode_consumed(zookeeper_client, znode, max_retries, wait_time):
-    # type: (kazoo.client.KazooClient, str, int, int) -> bool
+    # type: (kazoo.client.KazooClient, str, int, int)
     """Wait until a znode is consumed or wait-time is over
 
     Keyword arguments:
@@ -854,9 +642,6 @@ def wait_until_znode_consumed(zookeeper_client, znode, max_retries, wait_time):
     znode -- path and name for znode
     max_retries -- how often client checks if znode exists
     wait_time -- how long client waits between checking (in seconds)
-
-    Return:
-    consumed -- wether znode was consumed or not
     """
     consumed = False
     retries = 0
@@ -884,17 +669,19 @@ def validate_name(name):
     topic -- topicname
     """
     max_length = 249
-    #regex for checking if topicname only has valid characters
+    # regex for checking if topicname only has valid characters
     rema = re.match(r"^[[A-Za-z\d\.\-\_]+$",name)
     if rema:
         rema = rema.group(0)
     if not rema or len(rema) > max_length:
-        msg = ("Invalid name for topic %s." \
-              " Valid characters are: a-z, A-Z, 0-9, \".\",\"-\",\"_\"" \
-              " and a max-length of %s characters." \
-              %(name, max_length)
-              )
+        msg = (
+            "Invalid name for topic."
+            " Valid characters are: a-z, A-Z, 0-9, \".\",\"-\",\"_\""
+            " and a max-length of %s characters."
+            % (max_length)
+        )
         fail_module(msg)
+
 
 def validate_part_factor(factor):
     # type: (int)
@@ -946,166 +733,194 @@ def validate_rep_factor(factor):
 #                                        #
 ##########################################
 
-
-def add_config_together(topic, module):
-    # type: (str, AnsibleModulei, bool) -> dict
-    """Add different topic-configurations together in one dictionary.
-    If a topic-config isn't specified, the one already set will be kept.
+def add_config_together(topic, config):
+    # type: (dict) -> dict
+    """Go over configs, parse the artificial parameters
+    in kafka-native parameters.
 
     Keyword arguments:
-    topic -- Topicname
-    module -- This Ansiblemodule-object, containing the user-arguments
+    topic -- topicname
+    config -- module parameter config
 
     Return:
-    new_config -- dictionary containing complete topic-configuration
+    new_config -- containing only kafka-valid configs
     """
-    # retrieve user-set config
-    # set in native kafka language
-    configs = {
-        "cleanup.policy": module.params["cleanup_policy"],
-        "compression.type": module.params["compression_type"],
-        "delete.retention.ms": module.params["delete_retention_ms"],
-        "file.delete.delay.ms": module.params["file_delete_delay_ms"],
-        "flush.messages": module.params["flush_messages"],
-        "flush.ms": module.params["flush_ms"],
-        "follower.replication.throttled.replicas": module.params["follower_replication_throttled_replicas"],
-        "index.interval.bytes": module.params["index_interval_bytes"],
-        "leader.replication.throttled.replicas": module.params["leader_replication_throttled_replicas"],
-        "max.compaction.lag.ms":module.params["max_compaction_lag_ms"],
-        "max.message.bytes": module.params["max_message_bytes"],
-        "message.format.version": module.params["message_format_version"],
-        "message.timestamp.difference.max.ms": module.params["message_timestamp_difference_max_ms"],
-        "message.timestamp.type": module.params["message_timestamp_type"],
-        "min.cleanable.dirty.ratio": module.params["min_cleanable_dirty_ratio"],
-        "min.compaction.lag.ms": module.params["min_compaction_lag_ms"],
-        "min.insync.replicas": module.params["min_insync_replicas"],
-        "preallocate": module.params["preallocate"],
-        "retention.bytes": module.params["retention_bytes"],
-        "retention.ms": module.params["retention_ms"],
-        "segment.bytes": module.params["segment_bytes"],
-        "segment.index.bytes": module.params["segment_index_bytes"],
-        "segment.jitter.ms": module.params["segment_jitter_ms"],
-        "segment.ms": module.params["segment_ms"],
-        "unclean.leader.election.enable": module.params["unclean_leader_election_enable"],
-        "message.downconversion.enable": module.params["message_downconversion_enable"]
-    }
-
-    # retrieve user-set config
-    # in human readable way
+    # artificial configs mapping to native config
     alt_configs = {
-        "delete.retention.ms": module.params["delete_retention_time"],
-        "file.delete.delay.ms": module.params["file_delete_delay_time"],
-        "flush.ms": module.params["flush_time"],
-        "index.interval.bytes": module.params["index_interval_size"],
-        "max.compaction.lag.ms":module.params["max_compaction_lag_time"],
-        "max.message.bytes": module.params["max_message_size"],
-        "message.timestamp.difference.max.ms": module.params["message_timestamp_difference_max_time"],
-        "min.compaction.lag.ms": module.params["min_compaction_lag_time"],
-        "retention.bytes": module.params["retention_size"],
-        "retention.ms": module.params["retention_time"],
-        "segment.bytes": module.params["segment_size"],
-        "segment.index.bytes": module.params["segment_index_size"],
-        "segment.jitter.ms": module.params["segment_jitter_time"],
-        "segment.ms": module.params["segment_time"],
+        "delete.retention.ms": "delete_retention_time",
+        "file.delete.delay.ms": "file_delete_delay_time",
+        "flush.ms": "flush_time",
+        "index.interval.bytes": "index_interval_size",
+        "max.compaction.lag.ms": "max_compaction_lag_time",
+        "max.message.bytes": "max_message_size",
+        "message.timestamp.difference.max.ms": "message_timestamp_difference_max_time",
+        "min.compaction.lag.ms": "min_compaction_lag_time",
+        "retention.bytes": "retention_size",
+        "retention.ms": "retention_time",
+        "segment.bytes": "segment_size",
+        "segment.index.bytes": "segment_index_size",
+        "segment.jitter.ms": "segment_jitter_time",
+        "segment.ms": "segment_time",
     }
 
-    # set user-set config in human-readable way
-    # in config dict for further proceeding
-    for conf, value in alt_configs.items():
-        if alt_configs[conf] is not None:
-            configs[conf] = value
+    # map artificial config to corresponding validation-function
+    conf_valid_dict = dict(
+        delete_retention_time = validate_delete_retention_time,
+        file_delete_delay_time = validate_file_delete_delay_time,
+        flush_time = validate_flush_time,
+        index_interval_size = validate_index_interval_size,
+        max_compaction_lag_time = validate_max_compaction_lag_time,
+        max_message_size = validate_max_message_size,
+        message_timestamp_difference_max_time = validate_message_timestamp_difference_max_time,
+        min_compaction_lag_time = validate_min_compaction_lag_time,
+        retention_size = validate_retention_size,
+        retention_time = validate_retention_time,
+        segment_size = validate_segment_size,
+        segment_index_size = validate_segment_index_size,
+        segment_jitter_time = validate_segment_jitter_time,
+        segment_time = validate_segment_time,
+    )
+
+    # if no config set, skip it
+    if not bool(config):
+        config = {}
+        return config
+
+   # n_conf = native conf, a_conf = alternative conf
+    for n_conf, a_conf in alt_configs.items():
+        # check mutually exlusive configs not both set
+        if (n_conf in config) and (a_conf in config):
+            msg = (
+                "You tried to set mutually exlusive Topic"
+                " config parameters: "
+                " %s and %s. You can either set one or another,"
+                " but not both."
+                % (n_conf, a_conf)
+            )
+            fail_module(msg)
+        # validate a_conf and replace key with n_conf
+        if a_conf in config:
+          # if it looks like a duck and quacks like a duck
+          # it probably is a duck
+           n_value = conf_valid_dict[a_conf](config[a_conf])
+           del config[a_conf]
+           config[n_conf] = n_value
 
     # because java-bools are all lowercase and get returned as string, convert python-bool to string and lower for comparision
-    if configs['preallocate'] is not None:
-        configs['preallocate'] = str(configs['preallocate']).lower()
+    try:
+        config['preallocate'] = str(config['preallocate']).lower()
+    except KeyError:
+        pass
 
-    if configs['unclean.leader.election.enable'] is not None:
-        configs['unclean.leader.election.enable'] = str(configs['unclean.leader.election.enable']).lower()
+    try:
+        config['unclean.leader.election.enable'] = str(config['unclean.leader.election.enable']).lower()
+    except KeyError:
+        pass
 
-    if configs['message.downconversion.enable'] is not None:
-        configs['message.downconversion.enable'] = str(configs['message.downconversion.enable']).lower()
+    try:
+        config['message.downconversion.enable'] = str(config['message.downconversion.enable']).lower()
+    except KeyError:
+        pass
 
     new_conf = {}
 
     try:
         old_conf = get_topic_config(topic)
-        for conf, value in configs.items():
-            if configs[conf] is not None:
-                try:
-                    old_conf[conf]
-                    new_conf[conf] = value
-                except KeyError:
-                    module.warn(
-                        "Will not set Topic-config %s, because this Kafka-Cluster"
-                        " does no support this config so far."
-                        %(conf)
-                    )
-    except KafkaException:
-        for conf, value in configs.items():
-            if configs[conf] is not None:
+        for conf, value in config.items():
+ #           if config[conf] is not None:
+            try:
+                old_conf[conf]
                 new_conf[conf] = value
+            except KeyError:
+                module.warn(
+                    "Will not set Topic-config %s, because this Kafka-Cluster"
+                    " does no support this config so far."
+                    %(conf)
+                )
+    except KafkaException:
+        for conf, value in config.items():
+#            if config[conf] is not None:
+            new_conf[conf] = value
 
     return new_conf
 
 
 def validate_delete_retention_time(delete_retention_time):
-    # type: (str)
+    # type: (str) -> int
     """Validate delete_retention_time and convert to ms.
 
     Keyword arguments:
     delete_retention_time -- user configured delete-retention-ms, pattern: %d%h%m%s%ms
+
+    Return:
+    ms_total -- converted config
     """
-    convert_time_ms(delete_retention_time, "delete_retention_time")
+    return convert_time_ms(delete_retention_time, "delete_retention_time")
 
 
 def validate_file_delete_delay_time(file_delete_delay_time):
-    # type: (str)
+    # type: (str) -> int
     """Validate file_delete_delay_time and convert to ms.
 
     Keyword arguments:
     file_delete_delay_time -- user configured file-delete-delay-ms, pattern: %d%h%m%s%ms
+
+    Return:
+    ms_total -- converted config
     """
-    convert_time_ms(file_delete_delay_time, "file_delete_delay_time")
+    return convert_time_ms(file_delete_delay_time, "file_delete_delay_time")
 
 
 def validate_flush_time(flush_time):
-    # type: (str)
+    # type: (str) -> int
     """Validate flush_time and convert to ms.
 
     Keyword arguments:
     flush_time -- user configured flush-ms, pattern: %d%h%m%s%ms
+
+    Return:
+    ms_total -- converted config
     """
-    convert_time_ms(flush_time, "flush_time")
+    return convert_time_ms(flush_time, "flush_time")
 
 
 def validate_max_compaction_lag_time(max_compaction_lag_time):
-    # type: (str)
+    # type: (str) -> int
     """Validate max_compaction_lag_time and convert to ms.
 
     Keyword arguments:
     max_compaction_lag_time -- user configured max-compaction-lag-ms, pattern: %d%h%m%s%ms
+
+    Return:
+    ms_total -- converted config
     """
-    convert_time_ms(max_compaction_lag_time, "max_compaction_lag_time")
+    return convert_time_ms(max_compaction_lag_time, "max_compaction_lag_time")
 
 
 def validate_message_timestamp_difference_max_time(message_timestamp_difference_max_time):
-    # type: (str)
+    # type: (str) -> int
     """Validate message_timestamp_difference_max_time and convert to ms.
 
     Keyword arguments:
     message_timestamp_difference_max_time -- user configured message-timestamp-difference-max-ms, pattern: %d%h%m%s%ms
+
+    Return:
+    ms_total -- converted config
     """
-    convert_time_ms(message_timestamp_difference_max_time, "message_timestamp_difference_max_time")
+    return convert_time_ms(message_timestamp_difference_max_time, "message_timestamp_difference_max_time")
 
 
 def validate_min_compaction_lag_time(min_compaction_lag_time):
-    # type: (str)
+    # type: (str) -> int
     """Validate min_compaction_lag_time and convert to ms.
 
     Keyword arguments:
     min_compaction_lag_time -- user configured min-compaction-lag-ms, pattern: %d%h%m%s%ms
+
+    Return:
+    ms_total -- converted config
     """
-    convert_time_ms(min_compaction_lag_time, "min_compaction_lag_time")
+    return convert_time_ms(min_compaction_lag_time, "min_compaction_lag_time")
 
 
 def validate_retention_time(retention_time):
@@ -1119,37 +934,46 @@ def validate_retention_time(retention_time):
     retention_time -- If set to "-1", return it
     """
     if retention_time == "-1":     # sets retention-time to unlimited
-        return
-    convert_time_ms(retention_time, "retention_time")
+        return retention_time
+    return convert_time_ms(retention_time, "retention_time")
 
 
 def validate_segment_jitter_time(segment_jitter_time):
-    # type: (str)
+    # type: (str) -> int
     """Validate segment_jitter_time and convert to ms.
 
     Keyword arguments:
     segment_jitter_time -- user configured segment-jitter-ms, pattern: %d%h%m%s%ms
+
+    Return:
+    ms_total -- converted config
     """
-    convert_time_ms(segment_jitter_time, "segment_jitter_time")
+    return convert_time_ms(segment_jitter_time, "segment_jitter_time")
 
 
 def validate_segment_time(segment_time):
-    # type: (str)
+    # type: (str) -> int
     """Validate segment_time and convert to ms.
 
     Keyword arguments:
     segment_time -- user configured segment-ms, pattern: %d%h%m%s%ms
+
+    Return:
+    ms_total -- converted config
     """
-    convert_time_ms(segment_time, "segment_time")
+    return convert_time_ms(segment_time, "segment_time")
 
 
 def convert_time_ms(time_ms, config_type):
-    # type: (str,str)
+    # type: (str,str) -> int
     """Convert user-given time to ms.
 
     Keyword arguments:
     time_ms -- user-given time as string
     config_type -- for setting config and error-msg
+
+    Return:
+    ms_time -- converted time
     """
     # try to parse retention_time with regex into groups, split by timetype
     rema = re.match(r"^(?P<days>\d+d)?(?P<hours>\d+h)?(?P<minutes>\d+m)?(?P<seconds>\d+s)?(?P<miliseconds>\d+ms)?$", time_ms)
@@ -1188,68 +1012,86 @@ def convert_time_ms(time_ms, config_type):
         )
         fail_module(msg)
 
-    module.params[config_type] = ms_total
+    return ms_total
 
 
 def validate_index_interval_size(index_interval_size):
-    # type: (str)
+    # type: (str) -> int
     """Validate index_interval_size and convert to bytes.
 
     Keyword arguments:
     index_interval_size -- user configured index-interval-bytes, units: KiB, MiB, GiB, TiB, kB, MB, GB, TB
+
+    Return:
+    bytes_total -- converted config
     """
-    convert_storage_bytes(index_interval_size, "index_interval_size")
+    return convert_storage_bytes(index_interval_size, "index_interval_size")
 
 
 def validate_max_message_size(max_message_size):
-    # type: (str)
+    # type: (str) -> int
     """Validate max_message_size and convert to bytes.
 
     Keyword arguments:
     max_message_size -- user configured max-message-bytes, units: KiB, MiB, GiB, TiB, kB, MB, GB, TB
+
+    Return:
+    bytes_total -- converted config
     """
-    convert_storage_bytes(max_message_size, "max_message_size")
+    return convert_storage_bytes(max_message_size, "max_message_size")
 
 
 def validate_retention_size(retention_size):
-    # type: (str)
+    # type: (str) -> int
     """Validate retention_size and convert to bytes.
 
     Keyword arguments:
     retention_size -- user configured retention_size, units: KiB, MiB, GiB, TiB, kB, MB, GB, TB
+
+    Return:
+    bytes_total -- converted config
     """
     if retention_size == "-1":     # sets retention-time to unlimited
-        return
-    convert_storage_bytes(retention_size, "retention_size")
+        return retention_size
+    return convert_storage_bytes(retention_size, "retention_size")
 
 
 def validate_segment_size(segment_size):
-    # type: (str)
+    # type: (str) -> int
     """Validate segment_size and convert to bytes.
 
     Keyword arguments:
     segment_size -- user configured segment_size, units: KiB, MiB, GiB, TiB, kB, MB, GB, TB
+
+    Return:
+    bytes_total -- converted config
     """
-    convert_storage_bytes(segment_size, "segment_size")
+    return convert_storage_bytes(segment_size, "segment_size")
 
 
 def validate_segment_index_size(segment_index_size):
-    # type: (str)
+    # type: (str) -> int
     """Validate segment_index_size and convert to bytes.
 
     Keyword arguments:
     segment_index_size -- user configured segment_index_size, units: KiB, MiB, GiB, TiB, kB, MB, GB, TB
+
+    Return:
+    bytes_total -- converted config
     """
-    convert_storage_bytes(segment_index_size, "segment_index_size")
+    return convert_storage_bytes(segment_index_size, "segment_index_size")
 
 
 def convert_storage_bytes(storage, config_type):
-    # type: (str,str)
+    # type: (str,str) -> int
     """Convert user-given size into bytes and validate size depending on config-type.
 
     Keyword arguments:
     storage -- user-given storage-size as string
-    config_type -- for setting config and error-msg
+    config_type -- for error-msg
+
+    Return:
+    bytes_total -- converted config
     """
     # ^((?P<KiB>\d+KiB)|(?P<MiB>\d+MiB)|(?P<GiB>\d+GiB)|(?P<TiB>\d+TiB)|(?P<kB>\d+kB)|(?P<MB>\d+MB)|(?P<GB>\d+GB)|(?P<TB>\d+TB))?$
     rema = re.match(r"^((?P<KiB>\d+KiB)|(?P<MiB>\d+MiB)|(?P<GiB>\d+GiB)|(?P<TiB>\d+TiB)|(?P<kB>\d+kB)|(?P<MB>\d+MB)|(?P<GB>\d+GB)|(?P<TB>\d+TB)|(?P<B>\d+B))?$", storage)
@@ -1310,7 +1152,7 @@ def convert_storage_bytes(storage, config_type):
                 % (config_type, storage, bytes_total)
             )
             fail_module(msg)
-    module.params[config_type] = bytes_total
+    return bytes_total
 
 ##########################################
 #                                        #
@@ -1527,6 +1369,7 @@ def main():
     global result
     global admin
     global admin_conf
+    global diff
 
     # initialize object AnsibleModule
     module_args = dict(
@@ -1536,67 +1379,7 @@ def main():
         replication_factor = dict(type = 'int', required = True),
         bootstrap_server = dict(type = 'list'),
         zookeeper = dict(type = 'list'),
-        cleanup_policy = dict(type = 'str', choices = ['compact', 'delete']),
-        compression_type = dict(
-            type = 'str',
-            choices = [
-                'uncompressed',
-                'zstd',
-                'lz4',
-                'snappy',
-                'gzip',
-                'producer'
-            ]
-        ),
-        delete_retention_time = dict(type = 'str'),
-        delete_retention_ms = dict(type = 'int'),
-        file_delete_delay_time = dict(type = 'str'),
-        file_delete_delay_ms = dict(type = 'int'),
-        flush_messages = dict(type = 'int'),
-        flush_time = dict(type = 'str'),
-        flush_ms= dict(type = 'int'),
-        follower_replication_throttled_replicas = dict(type = 'str'),
-        index_interval_size = dict(type = 'str'),
-        index_interval_bytes= dict(type = 'int'),
-        leader_replication_throttled_replicas = dict(type = 'str'),
-        max_compaction_lag_time = dict(type = 'str'),
-        max_compaction_lag_ms= dict(type = 'int'),
-        max_message_size = dict(type = 'str'),
-        max_message_bytes= dict(type = 'int'),
-        message_format_version = dict(
-            type = 'str',
-            choices = [
-                '0.8.0', '0.8.1', '0.8.2', '0.9.0',
-                '0.10.0-IV0', '0.10.0-IV1', '0.10.1-IV0',
-                '0.10.1-IV1', '0.10.1-IV2', '0.10.2-IV0',
-                '0.11.0-IV0', '0.11.0-IV1', '0.11.0-IV2',
-                '1.0-IV0', '1.1-IV0', '2.0-IV0', '2.0-IV1',
-                '2.1-IV0', '2.1-IV1', '2.1-IV2', '2.2-IV0', '2.2-IV1',
-                '2.3-IV0', '2.3-IV1'
-            ]
-        ),
-        message_timestamp_difference_max_time = dict(type = 'str'),
-        message_timestamp_difference_max_ms= dict(type = 'int'),
-        message_timestamp_type = dict(type = 'str', choices = ['CreateTime', 'LogAppendTime']),
-        min_cleanable_dirty_ratio = dict(type = 'float'),
-        min_compaction_lag_time = dict(type = 'str'),
-        min_compaction_lag_ms= dict(type = 'int'),
-        min_insync_replicas = dict(type = 'int'),
-        preallocate = dict(type = 'bool'),
-        retention_size = dict(type = 'str'),
-        retention_bytes = dict(type = 'int'),
-        retention_time = dict(type = 'str'),
-        retention_ms = dict(type = 'int'),
-        segment_size = dict(type = 'str'),
-        segment_bytes = dict(type = 'int'),
-        segment_index_size = dict(type = 'str'),
-        segment_index_bytes = dict(type = 'int'),
-        segment_jitter_time = dict(type = 'str'),
-        segment_jitter_ms = dict(type = 'int'),
-        segment_time = dict(type = 'str'),
-        segment_ms = dict(type = 'int'),
-        unclean_leader_election_enable = dict(type = 'bool'),
-        message_downconversion_enable = dict(type = 'bool'),
+        config = dict(type = 'dict'),
         sasl_mechanism = dict(
             type = 'str',
             choices = [
@@ -1613,32 +1396,28 @@ def main():
         ca_location = dict(type = 'str')
     )
 
-    exclusive_module_args = [
-        ['delete_retention_ms','delete_retention_time'],
-        ['file_delete_delay_ms','file_delete_delay_time'],
-        ['flush_ms','flush_time'],
-        ['index_interval_bytes','index_interval_size'],
-        ['max_compaction_lag_ms','max_compaction_lag_time'],
-        ['max_message_bytes','max_message_size'],
-        ['message_timestamp_difference_max_ms','message_timestamp_difference_max_time'],
-        ['min_compaction_lag_ms','min_compaction_lag_time'],
-        ['retention_bytes','retention_size'],
-        ['retention_ms','retention_time'],
-        ['segment_bytes','segment_size'],
-        ['segment_index_bytes','segment_index_size'],
-        ['segment_jitter_ms','segment_jitter_time'],
-        ['segment_ms','segment_time']
-    ]
-
     result = dict(
         changed=False,
         name='',
-        state=''
+        state='',
     )
+
+    diff=dict(
+        before=dict(),
+        after=dict()
+    )
+
+    # example
+    # exclusive_module_args = [
+    #    ['delete_retention_ms','delete_retention_time'],
+    #    ['file_delete_delay_ms','file_delete_delay_time']
+    #]
+    exclusive_module_args = []
 
     module = AnsibleModule(
         argument_spec = module_args,
-        mutually_exclusive = exclusive_module_args
+        mutually_exclusive = exclusive_module_args,
+        supports_check_mode = True
     )
 
     # set topicname as result as soon as possible, for meaningful error-messages
@@ -1678,6 +1457,14 @@ def main():
                 " can not be modified."
             )
             pass
+#            msg = (
+#                "It seems that there is no zookeeper definition in"
+#                " the playbook and also not as an environment-variable."
+#                " If you want to use an environment-varible, make sure it's"
+#                " name is 'ZOOKEEPER'."
+#            )
+#            # turn line below to a comment to make zookeeper-def optional
+#            fail_module(msg)
 
     # loop through env-param-dict and set all params which are set in env
     for key, value in env_param.items():
@@ -1697,20 +1484,6 @@ def main():
         replication_factor = validate_rep_factor,
         bootstrap_server = validate_broker,
         zookeeper = validate_zookeeper,
-        delete_retention_time = validate_delete_retention_time,
-        file_delete_delay_time = validate_file_delete_delay_time,
-        flush_time = validate_flush_time,
-        index_interval_size = validate_index_interval_size,
-        max_compaction_lag_time = validate_max_compaction_lag_time,
-        max_message_size = validate_max_message_size,
-        message_timestamp_difference_max_time = validate_message_timestamp_difference_max_time,
-        min_compaction_lag_time = validate_min_compaction_lag_time,
-        retention_size = validate_retention_size,
-        retention_time = validate_retention_time,
-        segment_size = validate_segment_size,
-        segment_index_size = validate_segment_index_size,
-        segment_jitter_time = validate_segment_jitter_time,
-        segment_time = validate_segment_time,
         sasl_mechanism = validate_sasl_mechanism
     )
 
@@ -1736,8 +1509,18 @@ def main():
         result['state'] = "present"
         mod_part = compare_part(module.params['name'], module.params['partitions'])
         mod_rep = compare_rep(module.params['name'], module.params['replication_factor'])
-        new_conf = add_config_together(module.params['name'], module)
+        new_conf = add_config_together(module.params['name'], module.params['config'])
         mod_conf = compare_config(module.params['name'], new_conf)
+        # if checkmode, do nothing, return changes
+        if module.check_mode:
+            if mod_part:
+                result['changed'] = True
+            if mod_rep:
+                result['changed'] = True
+            if mod_conf:
+                result['changed'] = True
+            result['diff'] = diff
+            module.exit_json(**result)
         if mod_part:
             modify_part(
                 module.params['name'],
@@ -1755,16 +1538,28 @@ def main():
         if mod_conf:
             modify_config(module.params['name'], new_conf)
             result['changed'] = True
+        result['diff'] = diff
 
     # if topic exists and should not, delete it
     if topic_exists and (module.params['state'] == "absent"):
+        if module.check_mode:
+            result['changed'] = True
+            result['diff'] = diff
+            module.exit_json(**result)
         delete_topic(module.params['name'])
         result['changed'] = True
         result['state'] = "absent"
+        diff['before']['state']='present'
+        diff['after']['state']='absent'
+        result['diff'] = diff
 
     # if topic does not exist, but should, create and configure
     if not topic_exists and (module.params['state'] == "present"):
-        new_conf = add_config_together(module.params['name'], module)
+        new_conf = add_config_together(module.params['name'], module.params['config'])
+        if module.check_mode:
+            result['changed'] = True
+            result['diff'] = diff
+            module.exit_json(**result)
         create_topic(
             module.params['name'],
             module.params['partitions'],
@@ -1773,6 +1568,9 @@ def main():
         )
         result['changed'] = True
         result['state'] = "present"
+        diff['before']['state']='absent'
+        diff['after']['state']='present'
+        result['diff'] = diff
 
     # if topic does not exist and should stay that way, do nothing
     if not topic_exists and (module.params['state'] == "absent"):
