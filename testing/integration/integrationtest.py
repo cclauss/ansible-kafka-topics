@@ -192,6 +192,78 @@ def run_module(args):
     js = json.loads(tmpstr)
     return js
 
+def run_module_checkmode(args):
+    """Run module kafka_topic with json-file arguments in checkmode.
+    Return Stdout as dict.
+
+    Keyword Arguments:
+    args -- jsonfile-name
+
+    Return:
+    js -- dict containing stdout
+    """
+    econf={}
+    econf = get_econf(econf, args)
+    econf['_ansible_check_mode']="yes"
+    with open('tmp.json','w') as f:
+        json.dump(dict(ANSIBLE_MODULE_ARGS=econf), f)
+    cmd = "python ../../library/kafka_topic.py" + " tmp.json"
+    try:
+        result = subprocess.check_output(cmd, shell=True)
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError("command '{}' return with error (code {}): {}".format(e.cmd, e.returncode, e.output))
+    tmpstr = result.decode("utf-8")
+    js = json.loads(tmpstr)
+    return js
+
+def check_checkmode(confignames, aconf, echanged, args):
+    """Run module in checkmode and check if it did not change anything
+    and correctly predicts if something would change.
+
+    Keyword arguments:
+    confignames -- List containing all possible Topic-Configs
+    econf -- expected configuration, loaded from Json-Argument-File
+    aconf -- actual config, fetched with adminclient
+    echanged -- expected result, if something changed or not (bool)
+    args -- jsonfile-name
+    """
+    something_wrong = False
+
+    if check_topic(topic, a):
+        aconf = get_part_info(topic, aconf, a)
+        aconf = get_config_info(topic, aconf, a)
+
+    result = run_module_checkmode(args)
+
+    if result["changed"] != echanged:
+        print("EXPECTED RESULT changed = ",echanged,", but got: ")
+        print(result["changed"])
+        something_wrong = True
+
+    if check_topic(topic, a):
+        nconf = {} # same as actual conf, but new var so we can compare
+
+        nconf = get_part_info(topic, nconf, a)
+        nconf = get_config_info(topic, nconf, a)
+
+        if aconf != nconf:
+            print("EXPECTED RESULT changed = ",echanged,", but got: ")
+            print(result["changed"])
+            something_wrong = True
+
+    if something_wrong:
+        print("SOMETHING WRONG WITH CHECKMODE:")
+        print("FORECAST:" + result["changed"])
+        print("EXPECTED RESULT:" + echanged)
+        print("CONFIG BEFORE RUN:")
+        print(aconf)
+        print("CONFIG AFTER RUN:")
+        print(nconf)
+        sys.exit(0)
+
+
+
+
 def compare_all(confignames, econf, aconf, result, echanged):
     """Compare expected Topic-Configuration with actual Configuration.
 
@@ -215,11 +287,28 @@ def compare_all(confignames, econf, aconf, result, echanged):
     for config in confignames:
         df.append(config)
 
-    for ekey, evalue in econf.items():
+    # load expected topicconfig in dict
+    try:
+        etconf = econf['config']
+    except KeyError:
+        etconf = {}
+
+    # loop through expected topic-conf dict, add expected configs in
+    # list for configs not on default value, remove them from list containing
+    # expected default configs
+    # only compares artificial configs
+    for ekey,_ in etconf.items():
         for ckey, cvalue in confignames_map.items():
             if ekey == ckey:
                 ndf.append(cvalue)
                 df.remove(cvalue)
+
+    # loop again, this time to also compare native-set configs
+    for ekey,_ in etconf.items():
+        for config in confignames:
+            if ekey == config:
+                ndf.append(config)
+                df.remove(config)
 
     while not check_topic(topic,a):
         time.sleep(1)
@@ -318,35 +407,21 @@ if __name__ == '__main__':
         "unclean.leader.election.enable","message.downconversion.enable"
     ]
     confignames_map = dict(
-        cleanup_policy = "cleanup.policy",
-        compression_type = "compression.type",
-        delete_retention_ms = "delete.retention.ms",
-        file_delete_delay_ms = "file.delete.delay.ms",
-        flush_messages = "flush.messages",
-        flush_ms = "flush.ms",
-        follower_replication_throttled_replicas = "follower.replication.throttled.replicas",
-        index_interval_bytes = "index.interval.bytes",
-        leader_replication_throttled_replicas = "leader.replication.throttled.replicas",
-        max_compaction_lag_ms = "max.compaction.lag.ms",
-        max_message_bytes = "max.message.bytes",
-        message_format_version = "message.format.version",
-        message_timestamp_difference_max_ms = "message.timestamp.difference.max.ms",
-        message_timestamp_type = "message.timestamp.type",
-        min_cleanable_dirty_ratio = "min.cleanable.dirty.ratio",
-        min_compaction_lag_ms = "min.compaction.lag.ms",
-        min_insync_replicas = "min.insync.replicas",
-        preallocate = "preallocate",
-        retention_bytes = "retention.bytes",
-        retention_ms = "retention.ms",
-        segment_bytes = "segment.bytes",
-        segment_index_bytes = "segment.index.bytes",
-        segment_jitter_ms = "segment.jitter.ms",
-        segment_ms = "segment.ms",
-        unclean_leader_election_enable = "unclean.leader.election.enable",
-        message_downconversion_enable = "message.downconversion.enable"
+        delete_retention_time = "delete.retention.ms",
+        file_delete_delay_time = "file.delete.delay.ms",
+        flush_time = "flush.ms",
+        index_interval_size = "index.interval.bytes",
+        max_compaction_lag_time = "max.compaction.lag.ms",
+        max_message_size = "max.message.bytes",
+        message_timestamp_difference_max_time = "message.timestamp.difference.max.ms",
+        min_compaction_lag_time = "min.compaction.lag.ms",
+        retention_size = "retention.bytes",
+        retention_time = "retention.ms",
+        segment_size = "segment.bytes",
+        segment_index_size = "segment.index.bytes",
+        segment_jitter_time = "segment.jitter.ms",
+        segment_time = "segment.ms"
     )
-
-
 
     # Check if topic already exists.
     # Delete Topic if thats the case
@@ -364,13 +439,19 @@ if __name__ == '__main__':
 
     try:
         #######################################
-        #                                     #
         #  Create Topic                       #
-        #                                     #
         #######################################
         print("-------------------------------------")
         print("CREATE NEW TOPIC testTheTopicMachine")
         print("-------------------------------------")
+
+        # check checkmode
+        print("Check checkmode")
+        check_checkmode(confignames, aconf, True, "create_topic.json")
+        print("==> checkmode did not change anything")
+
+        # Real deal here
+        print("Testing Module without checkmode - Real Deal!")
         econf = get_econf(econf, "create_topic.json")
         result = run_module("create_topic.json")
 
@@ -379,13 +460,19 @@ if __name__ == '__main__':
         print("==> Everything as expected\n")
 
         #######################################
-        #                                     #
         #  modify config                      #
-        #                                     #
         #######################################
         print("--------------------------------------------------")
         print("MODIFY TOPIC testTheTopicMachine: ADD TOPICCONFIGS")
         print("--------------------------------------------------")
+
+        # check checkmode
+        print("Check checkmode")
+        check_checkmode(confignames, aconf, True, "modify_topic.json")
+        print("==> checkmode did not change anything")
+
+        # Real deal here
+        print("Testing Module without checkmode - Real Deal!")
         econf = get_econf(econf, "modify_topic.json")
         result = run_module("modify_topic.json")
 
@@ -394,13 +481,19 @@ if __name__ == '__main__':
         print("==> Everything as expected\n")
 
         #######################################
-        #                                     #
         #  modify config                      #
-        #                                     #
         #######################################
         print("--------------------------------------------------------")
         print("MODIFY TOPIC testTheTopicMachine: ADD TOPICCONFIGS AGAIN")
         print("--------------------------------------------------------")
+
+        # check checkmode
+        print("Check checkmode")
+        check_checkmode(confignames, aconf, False, "modify_topic.json")
+        print("==> checkmode did not change anything")
+
+        # Real deal here
+        print("Testing Module without checkmode - Real Deal!")
         econf = get_econf(econf, "modify_topic.json")
         result = run_module("modify_topic.json")
 
@@ -409,13 +502,19 @@ if __name__ == '__main__':
         print("==> Everything as expected\n")
 
         #######################################
-        #                                     #
         #  remove some configs                #
-        #                                     #
         #######################################
         print("----------------------------------------------------------")
         print("MODIFY TOPIC testTheTopicMachine: REMOVE SOME TOPICCONFIGS")
         print("----------------------------------------------------------")
+
+        # check checkmode
+        print("Check checkmode")
+        check_checkmode(confignames, aconf, True, "remove_configs.json")
+        print("==> checkmode did not change anything")
+
+        # Real deal here
+        print("Testing Module without checkmode - Real Deal!")
         econf = get_econf(econf, "remove_configs.json")
         result = run_module("remove_configs.json")
 
@@ -424,13 +523,19 @@ if __name__ == '__main__':
         print("==> Everything as expected\n")
 
         #######################################
-        #                                     #
         #  modify more configs                #
-        #                                     #
         #######################################
         print("-----------------------------------------------------")
         print("MODIFY TOPIC testTheTopicMachine: MODIFY TOPICCONFIGS")
         print("-----------------------------------------------------")
+
+        # check checkmode
+        print("Check checkmode")
+        check_checkmode(confignames, aconf, True, "modify_more_configs.json")
+        print("==> checkmode did not change anything")
+
+        # Real deal here
+        print("Testing Module without checkmode - Real Deal!")
         econf = get_econf(econf, "modify_more_configs.json")
         result = run_module("modify_more_configs.json")
 
@@ -439,13 +544,19 @@ if __name__ == '__main__':
         print("==> Everything as expected\n")
 
         #######################################
-        #                                     #
         #  modify partitions
-        #                                     #
         #######################################
         print("---------------------------------------------------------")
         print("MODIFY TOPIC testTheTopicMachine: MODIFY PARTITION-NUMBER")
         print("---------------------------------------------------------")
+
+        # check checkmode
+        print("Check checkmode")
+        check_checkmode(confignames, aconf, True, "modify_part.json")
+        print("==> checkmode did not change anything")
+
+        # Real deal here
+        print("Testing Module without checkmode - Real Deal!")
         econf = get_econf(econf, "modify_part.json")
         result = run_module("modify_part.json")
 
@@ -454,13 +565,19 @@ if __name__ == '__main__':
         print("==> Everything as expected\n")
 
         #######################################
-        #                                     #
         #  increase replication-factor
-        #                                     #
         #######################################
         print("-------------------------------------------------------------")
         print("MODIFY TOPIC testTheTopicMachine: INCREASE REPLICATION-FACTOR")
         print("-------------------------------------------------------------")
+
+        # check checkmode
+        print("Check checkmode")
+        check_checkmode(confignames, aconf, True, "increase_rep.json")
+        print("==> checkmode did not change anything")
+
+        # Real deal here
+        print("Testing Module without checkmode - Real Deal!")
         econf = get_econf(econf, "increase_rep.json")
         result = run_module("increase_rep.json")
 
@@ -469,13 +586,19 @@ if __name__ == '__main__':
         print("==> Everything as expected\n")
 
         #######################################
-        #                                     #
         #  reduce replication-factor
-        #                                     #
         #######################################
         print("-----------------------------------------------------------")
         print("MODIFY TOPIC testTheTopicMachine: REDUCE REPLICATION-FACTOR")
         print("-----------------------------------------------------------")
+
+        # check checkmode
+        print("Check checkmode")
+        check_checkmode(confignames, aconf, True, "reduce_rep.json")
+        print("==> checkmode did not change anything")
+
+        # Real deal here
+        print("Testing Module without checkmode - Real Deal!")
         econf = get_econf(econf, "reduce_rep.json")
         result = run_module("reduce_rep.json")
 
@@ -484,36 +607,50 @@ if __name__ == '__main__':
         print("==> Everything as expected\n")
 
         #######################################
-        #                                     #
         #  delete topic
-        #                                     #
         #######################################
         print("--------------------------------")
         print("DELETE TOPIC testTheTopicMachine")
         print("--------------------------------")
+
+        # check checkmode
+        print("Check checkmode")
+        check_checkmode(confignames, aconf, True, "delete_topic.json")
+        print("==> checkmode did not change anything")
+
+        # Real deal here
+        print("Testing Module without checkmode - Real Deal!")
         econf = get_econf(econf, "delete_topic.json")
         result = run_module("delete_topic.json")
 
         if result["changed"] != True:
             print("ERROR: EXPECTED RESULT changed = True, but got: ")
             print(result["changed"])
+            sys.exit(0)
 
 
         time.sleep(3)
 
         if check_topic(topic, a):
             print("ERROR: EXPECTED THAT TOPIC IS ABSENT. BUT TOPIC IS STILL PRESENT.")
+            sys.exit(0)
 
         print("==> Everything as expected\n")
 
         #######################################
-        #                                     #
         #  Create Topic again with all the configs
-        #                                     #
         #######################################
         print("------------------------------------------------------------------------------")
         print("CREATE TOPIC testTheTopicMachine AGAIN: with ALL the possible (or not) configs")
         print("------------------------------------------------------------------------------")
+
+        # check checkmode
+        print("Check checkmode")
+        check_checkmode(confignames, aconf, True, "create_topic2.json")
+        print("==> checkmode did not change anything")
+
+        # Real deal here
+        print("Testing Module without checkmode - Real Deal!")
         econf = get_econf(econf, "create_topic2.json")
         result = run_module("create_topic2.json")
 
@@ -522,32 +659,66 @@ if __name__ == '__main__':
         print("==> Everything as expected\n")
 
         #######################################
-        #                                     #
+        #  Create Topic again with all the configs
+        #######################################
+        print("-----------------------------------------------------------")
+        print("MODIFY TOPIC testTheTopicMachine: with native topicconfigs.")
+        print("-----------------------------------------------------------")
+
+        # check checkmode
+        print("Check checkmode")
+        check_checkmode(confignames, aconf, True, "modify_native.json")
+        print("==> checkmode did not change anything")
+
+        # Real deal here
+        print("Testing Module without checkmode - Real Deal!")
+        econf = get_econf(econf, "modify_native.json")
+        result = run_module("modify_native.json")
+
+        compare_all(confignames, econf, aconf, result, True)
+
+        print("==> Everything as expected\n")
+
+        #######################################
         #  delete topic
-        #                                     #
         #######################################
         print("--------------------------------")
         print("DELETE TOPIC testTheTopicMachine")
         print("--------------------------------")
+
+        # check checkmode
+        print("Check checkmode")
+        check_checkmode(confignames, aconf, True, "delete_topic.json")
+        print("==> checkmode did not change anything")
+
+        # Real deal here
+        print("Testing Module without checkmode - Real Deal!")
         econf = get_econf(econf, "delete_topic.json")
         result = run_module("delete_topic.json")
 
         if result["changed"] != True:
             print("ERROR: EXPECTED RESULT changed = True, but got: ")
             print(result["changed"])
+            sys.exit(0)
 
 
         time.sleep(3)
 
         if check_topic(topic, a):
             print("ERROR: EXPECTED THAT TOPIC IS ABSENT. BUT TOPIC IS STILL PRESENT.")
+            sys.exit(0)
 
         print("==> Everything as expected\n")
 
     finally:
         if check_topic(topic, a):
+            print("--------------------------------------------------")
             print("ATTEMPT TO DELETE "+topic+" FOR A GRACEFUL FINISH.")
             b = delete_topic(topic,a)
             if not b:
                 print("ERROR: DELETING TOPIC "+topic+" FAILED")
+                print("--------------------------------------")
                 raise e
+            else:
+                print("EXTERMINATED "+topic+" SUCCESSFULLY.")
+                print("------------------------------------")
